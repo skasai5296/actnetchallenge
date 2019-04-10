@@ -2,7 +2,8 @@
 repo for activity net challenge 2019
 
 TO-DO:
-- [x] complete shell script for downloading ActivityNet videos
+- [x] complete script for downloading ActivityNet videos
+- [ ] complete script for converting .mp4 extensions to .jpg
 - [ ] write dataset class for ActivityNet Captions dataset
 - [ ] write model for learning from pretrained features of videos
 
