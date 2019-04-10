@@ -3,6 +3,9 @@ import json
 import time
 import argparse
 
+from os.path import expanduser
+home = expanduser("~")
+
 from pytube import YouTube
 
 
@@ -13,7 +16,7 @@ def urlgenerator(obj):
                 for key2, value2 in value.items():
                     yield key2, value2['url']
 
-def downloader(urlgen):
+def downloader(download_path, urlgen):
     cnt = 0
     failcnt = 0
     succeedcnt = 0
@@ -22,7 +25,7 @@ def downloader(urlgen):
         try:
             yt = YouTube(url)
             st = yt.streams.filter(file_extension='mp4').first()
-            st.download(path)
+            st.download(download_path)
             succeedcnt += 1
         except:
             failcnt += 1
@@ -37,18 +40,23 @@ def downloader(urlgen):
 
 
 def main(args):
-    path = os.path.join(args.dset_root, 'videos/')
+    if args.download_path is None:
+        download_path = os.path.join(args.dset_root, 'videos')
+    else:
+        download_path = args.download_path
+    path = os.path.join(args.dset_root, 'videos')
     if not os.path.exists(path):
         os.mkdir(path)
-    with open(os.path.join(path, args.json_path), 'r') as f:
+    with open(os.path.join(args.dset_root, args.json_path), 'r') as f:
         obj = json.load(f)
-    downloader(urlgenerator(obj))
+    downloader(download_path, urlgenerator(obj))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dset_root', '-d', type=str, default='~/ssd1/dsets/activitynet_captions')
+    parser.add_argument('--dset_root', '-d', type=str, required=True)
     parser.add_argument('--json_path', '-j', type=str, default='activity_net.v1-3.min.json')
+    parser.add_argument('--download_path', '-t', type=str, default=None)
     args = parser.parse_args()
     main(args)
 
