@@ -27,10 +27,10 @@ def downloader(download_path, urlgen):
             st = yt.streams.filter(file_extension='mp4').first()
             st.download(output_path=download_path, filename=str(id))
             succeedcnt += 1
-            print('downloaded {}, total = {}'.format(id+".mp4", succeedcnt), flush=True)
+            print('downloaded {}.mp4, total = {}'.format(id, succeedcnt), flush=True)
         except:
             failcnt += 1
-            print('could not download id: {}, failcount = {}'.format(id, failcnt), flush=True)
+            print('could not download {}.mp4, failcount = {}'.format(id, failcnt), flush=True)
             continue
         if succeedcnt % 100 == 99:
             elapsed = time.time() - before
