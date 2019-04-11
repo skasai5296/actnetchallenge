@@ -25,13 +25,14 @@ def downloader(download_path, urlgen):
         try:
             yt = YouTube(url)
             st = yt.streams.filter(file_extension='mp4').first()
-            st.download(download_path)
+            st.download(output_path=download_path, filename=str(id))
             succeedcnt += 1
+            print('downloaded {}, total = {}'.format(id+".mp4", succeedcnt), flush=True)
         except:
             failcnt += 1
             print('could not download id: {}, failcount = {}'.format(id, failcnt), flush=True)
             continue
-        if succeedcnt % 5 == 4:
+        if succeedcnt % 100 == 99:
             elapsed = time.time() - before
             print('{} videos done, {}s per loop'.format(succeedcnt+1, elapsed/5), flush=True)
             before = time.time()
