@@ -61,15 +61,45 @@ def id_loader(path):
     """
     key2id = {}
     with open(path, "r") as f:
-        id2key = json.load(f)
+        ids = json.load(f)
+    # remove "v_" prefix
+    id2key = [id[2:] for id in ids]
     for index, videoid in enumerate(id2key):
         key2id[videoid] = index
-    print(key2id)
     return id2key, key2id
 
 # preprocess object from activitynet captions dataset.
-def preprocess(predata):
-    pass
+def preprocess(predata, metadata, vidnum, key2idx):
+    data = [None] * vidnum
+    tmp = {}
+    for obj in metadata:
+        idx = key2idx[obj['video_id']]
+        tmp['video_id'] = obj['video_id']
+        tmp['framerate'] = obj['framerate']
+        tmp['num_frames'] = obj['num_frames']
+        tmp['width'] = obj['width']
+        tmp['height'] = obj['height']
+        data[idx] = tmp
+    for v_id, obj in predata.items():
+        try:
+            idx = key2idx[obj['video_id']]
+        except KeyError:
+            continue
+        fps = data[idx]['framerate']
+        regions_sec = obj['timestamps']
+        captions = obj['captions']
+        regs = []
+        regcnt = 0
+        for region in regions_sec:
+            # convert into frame duration
+            region = [int(ts*fps) for ts in region]
+            regs.append(region)
+            regcnt += 1
+        data[idx]['regions'] = regs
+        data[idx]['captions'] = captions
+        data[idx]['segments'] = regcnt
+    return data
+
 
 class ActivityNetCaptions(Dataset):
     """
@@ -91,6 +121,7 @@ class ActivityNetCaptions(Dataset):
 
     def __init__(self,
                  root_path,
+                 metadata,
                  mode,
                  is_adaptively_dilated=False,
                  n_samples_for_each_video=1,
@@ -103,20 +134,27 @@ class ActivityNetCaptions(Dataset):
         self.dilate = is_adaptively_dilated
 
         idpath = "{}_ids.json".format(mode)
+        self.idx2key, self.key2idx = id_loader(os.path.join(root_path, idpath))
+
+        assert mode in ['train', 'val', 'test'], "AssertionError: mode in ActivityNetCaptions must be one of ['train', 'val', 'test']"
         self.category = 'val_1' if mode is 'val' else mode
         self.annfile = "{}.json".format(self.category) if mode is not 'test' else None
-
-        self.id2key, self.key2id = id_loader(os.path.join(root_path, idpath))
 
         if self.annfile is not None:
             with open(os.path.join(root_path, self.annfile)) as f:
                 self.predata = json.load(f)
 
-        self.data = preprocess(self.predata)
+        with open(os.path.join(root_path, metadata)) as f:
+            self.meta = json.loads(f.read())
+
+        self.vidnum = len(self.meta)
+
+        self.data = preprocess(self.predata, self.meta, self.vidnum, self.key2idx)
+        print(self.data)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.target_transform = target_transform
-        self.loader = get_loader()
+        self.loader = get_loader
 
     def __getitem__(self, index):
         """
@@ -147,4 +185,4 @@ class ActivityNetCaptions(Dataset):
 
 
 if __name__ == '__main__':
-    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'train')
+    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa.json', 'train')
