@@ -12,10 +12,12 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 
+# video loader.
+# loads frame indices and gets
 def video_loader(video_dir_path, frame_indices, image_loader):
     video = []
     for i in frame_indices:
-        image_path = os.path.join(video_dir_path, 'image_{:05d}.jpg'.format(i))
+        image_path = os.path.join(video_dir_path, '{:06d}.jpg'.format(i))
         if os.path.exists(image_path):
             video.append(image_loader(image_path))
         else:
@@ -68,7 +70,21 @@ def id_loader(path):
         key2id[videoid] = index
     return id2key, key2id
 
-# preprocess object from activitynet captions dataset.
+"""
+preprocess object from activitynet captions dataset.
+concats metadata into data.
+data attributes: list of dict. list index is the index of video, dict is info about video.
+dict : {
+    'video_id'      : str, shows the video id.
+    'framerate'     : float, shows the framerate per second
+    'num_frames'    : int, total number of frames in the video
+    'width'         : int, the width of video in pixels
+    'height'        : int, the height of video in pixels
+    'regions'       : [[int, int], [int, int], ...], list including start and end frames of actions
+    'captions'      : [str, str, ...], list including captions for each action
+    'segments'      : int, number of actions
+}
+"""
 def preprocess(predata, metadata, vidnum, key2idx):
     data = [None] * vidnum
     tmp = {}
@@ -123,6 +139,7 @@ class ActivityNetCaptions(Dataset):
                  root_path,
                  metadata,
                  mode,
+                 frame_path='frames',
                  is_adaptively_dilated=False,
                  n_samples_for_each_video=1,
                  spatial_transform=None,
@@ -136,19 +153,26 @@ class ActivityNetCaptions(Dataset):
         idpath = "{}_ids.json".format(mode)
         self.idx2key, self.key2idx = id_loader(os.path.join(root_path, idpath))
 
-        assert mode in ['train', 'val', 'test'], "AssertionError: mode in ActivityNetCaptions must be one of ['train', 'val', 'test']"
+        try:
+            assert mode in ['train', 'val', 'test']
+        except AssertionError:
+            print("mode in ActivityNetCaptions must be one of ['train', 'val', 'test']", True)
         self.category = 'val_1' if mode is 'val' else mode
         self.annfile = "{}.json".format(self.category) if mode is not 'test' else None
 
+        # load annotation files
         if self.annfile is not None:
             with open(os.path.join(root_path, self.annfile)) as f:
                 self.predata = json.load(f)
 
+        # load metadata files
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.loads(f.read())
 
-        self.vidnum = len(self.meta)
+        # save frame root path
+        self.frame_path = os.path.join(root_path, frame_path)
 
+        self.vidnum = len(self.meta)
         self.data = preprocess(self.predata, self.meta, self.vidnum, self.key2idx)
         print(self.data)
         self.spatial_transform = spatial_transform
@@ -163,9 +187,27 @@ class ActivityNetCaptions(Dataset):
         Returns:
             tuple: (image, segments) where target is class_index of the target class.
         """
-        path = self.data[index]['video']
 
-        frame_indices = self.data[index]['frame_indices']
+        """
+        preprocess object from activitynet captions dataset.
+        concats metadata into data.
+        data attributes: list of dict. list index is the index of video, dict is info about video.
+        dict : {
+            'video_id'      : str, shows the video id.
+            'framerate'     : float, shows the framerate per second
+            'num_frames'    : int, total number of frames in the video
+            'width'         : int, the width of video in pixels
+            'height'        : int, the height of video in pixels
+            'regions'       : [[int, int], [int, int], ...], list including start and end frames of actions
+            'captions'      : [str, str, ...], list including captions for each action
+            'segments'      : int, number of actions
+        }
+        """
+        id = self.data[index]['video_id']
+        num_frames = self.data[index]['num_frames']
+
+        frame_indices = list(range(num_frames))
+
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
@@ -181,8 +223,8 @@ class ActivityNetCaptions(Dataset):
         return clip, target
 
     def __len__(self):
-        return len(self.data)
+        return self.vidnum
 
 
 if __name__ == '__main__':
-    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa.json', 'train')
+    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames')
