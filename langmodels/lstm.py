@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 
-from utils import *
+sys.path.append(os.pardir)
+from utils.utils import *
 
 
 # embedding module.
@@ -25,17 +26,22 @@ class Embedding(nn.Module):
     def forward(self, x):
         return self.emb(x)
 
+    # TODO
+    def init_pretrained_weights(self, vocab):
+        pass
+
+
 # captioning module.
 # lstm_memory must be same as output dimension of encoder (3DCNN). TCHW must be flattened.
-class Captioning(nn.Module):
+class RNNCaptioning(nn.Module):
     def __init__(self,
                  method='LSTM',
                  emb_size=512,
                  lstm_memory=512,
-                 vocab_size=None,
+                 vocab_size=100,
                  max_seqlen=20
                  ):
-        super(Captioning, self).__init__()
+        super(RNNCaptioning, self).__init__()
         self.method = method
         self.emb_size = emb_size
         self.lstm_memory = lstm_memory
@@ -43,8 +49,8 @@ class Captioning(nn.Module):
         self.max_seqlen = max_seqlen
 
         self.emb = nn.Embedding(self.vocab_size, self.emb_size)
-        if method = 'LSTM':
-            self.rnn = nn.LSTMCell(self.input_features+self.emb_size, self.lstm_memory)
+        if method == 'LSTM':
+            self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
         self.linear = nn.Linear(self.lstm_memory, self.vocab_size)
         self.softmax = nn.Softmax()
 
@@ -61,7 +67,7 @@ class Captioning(nn.Module):
         # hx : (batch_size, lstm_memory)
         hx = image_feature
         # cx : (batch_size, lstm_memory)
-        cx = random.randn(batch_size, self.lstm_memory)
+        cx = torch.randn_like(hx)
         output = []
         # xthemb : (seq_len)
         # (hx, cx) : (batch_size, vocab_size)
@@ -69,7 +75,7 @@ class Captioning(nn.Module):
             hx, cx = self.rnn(xthemb, (hx, cx))
             output.append(hx)
         # output : (batch_size, seq_len, lstm_memory)
-        output = torch.stack(output, dim=0).transpose(1, 0, 2)
+        output = torch.stack(output, dim=0).transpose(0, 1)
         # output : (batch_size, seq_len, vocab_size)
         output = self.softmax(self.linear(output))
         return output
@@ -97,6 +103,9 @@ class Captioning(nn.Module):
                     sentences[bs].append(wordidx[bs].item())
         return sentences
 
+    # TODO
+    def init_pretrained_weights(self, vocab):
+        self.emb.init_pretrained_weights(vocab)
 
 
 
@@ -111,3 +120,15 @@ class Transformer(nn.Module):
 
     def forward(self, x):
         pass
+
+
+
+if __name__ == '__main__':
+    bs = 10
+    data = torch.randn(bs, 512)
+    captionidx = torch.randint(0, 100, size=(bs, 20))
+    model = RNNCaptioning()
+    print(model(data, captionidx).size())
+
+
+

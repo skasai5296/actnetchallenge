@@ -72,6 +72,7 @@ def vid2meta(video_dir, frame_dir, idsdir, save_file, shorter):
 
     with open(save_file, "w+") as f:
         f.write(json.dumps(logs))
+    print("saved metafile to {}".format(save_file))
 
     return len(logs)
 

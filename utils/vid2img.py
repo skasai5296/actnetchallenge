@@ -87,7 +87,7 @@ def vid2frames(video_path, tar_path, idfiles, shorter):
         if i % 1000 == 999:
             print("{}/{} done".format(i+1, total), flush=True)
 
-    return fullflag
+    return num, fullflag
 
 def main(args):
     idsdir = [os.path.join(args.rootdir, file) for file in args.idfiles]
@@ -96,7 +96,7 @@ def main(args):
 
     idfiles = get_actnetcaption_ids(idsdir)
 
-    flag = vid2frames(videodir, savedir, idfiles, args.shorter)
+    num, flag = vid2frames(videodir, savedir, idfiles, args.shorter)
     print("number of video files saved as frames: {}".format(num))
     if not flag:
         print("done!!")

@@ -1,5 +1,5 @@
 import sys, os
-import time
+import random
 
 from PIL import Image
 import functools
@@ -7,13 +7,14 @@ import json
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
-from torchvision import transforms
-
+sys.path.append(os.pardir)
+import transforms.spatial_transforms as spt
+import transforms.temporal_transforms as tpt
 
 # video loader.
-# loads frame indices and gets
+# loads frame indices and gets the images from each frame
 def video_loader(video_dir_path, frame_indices, image_loader):
     video = []
     for i in frame_indices:
@@ -25,7 +26,7 @@ def video_loader(video_dir_path, frame_indices, image_loader):
 
     return video
 
-# 
+# get default video loader.
 def get_default_video_loader():
     image_loader = get_default_image_loader()
     return functools.partial(video_loader, image_loader=image_loader)
@@ -52,10 +53,12 @@ def accimage_loader(path):
         # Potentially a decoding problem, fall back to PIL.Image
         return pil_loader(path)
 
-def id_loader(path):
+# returns the index <-> video id mapping
+def id_loader(path, framepath):
     """
     Args:
         path : string containing path to json file containing video ids
+        framepath : string containing path to video frames
     Returns:
         (id2key, key2id) where:
             id2key : list containing video ids
@@ -65,7 +68,7 @@ def id_loader(path):
     with open(path, "r") as f:
         ids = json.load(f)
     # remove "v_" prefix
-    id2key = [id[2:] for id in ids]
+    id2key = [id[2:] for id in ids if os.path.exists(os.path.join(framepath, id[2:]))]
     for index, videoid in enumerate(id2key):
         key2id[videoid] = index
     return id2key, key2id
@@ -80,15 +83,15 @@ dict : {
     'num_frames'    : int, total number of frames in the video
     'width'         : int, the width of video in pixels
     'height'        : int, the height of video in pixels
-    'regions'       : [[int, int], [int, int], ...], list including start and end frames of actions
+    'regions'       : [[int, int], [int, int], ...], list including start and end frame numbers of actions
     'captions'      : [str, str, ...], list including captions for each action
     'segments'      : int, number of actions
 }
 """
-def preprocess(predata, metadata, vidnum, key2idx):
-    data = [None] * vidnum
-    tmp = {}
+def preprocess(predata, metadata, key2idx):
+    data = [None] * len(key2idx.keys())
     for obj in metadata:
+        tmp = {}
         idx = key2idx[obj['video_id']]
         tmp['video_id'] = obj['video_id']
         tmp['framerate'] = obj['framerate']
@@ -98,17 +101,17 @@ def preprocess(predata, metadata, vidnum, key2idx):
         data[idx] = tmp
     for v_id, obj in predata.items():
         try:
-            idx = key2idx[obj['video_id']]
+            idx = key2idx[v_id[2:]]
         except KeyError:
             continue
         fps = data[idx]['framerate']
         regions_sec = obj['timestamps']
-        captions = obj['captions']
+        captions = obj['sentences']
         regs = []
         regcnt = 0
         for region in regions_sec:
             # convert into frame duration
-            region = [int(ts*fps) for ts in region]
+            region = [min(int(ts*fps), data[idx]['num_frames']) for ts in region]
             regs.append(region)
             regcnt += 1
         data[idx]['regions'] = regs
@@ -151,7 +154,9 @@ class ActivityNetCaptions(Dataset):
         self.dilate = is_adaptively_dilated
 
         idpath = "{}_ids.json".format(mode)
-        self.idx2key, self.key2idx = id_loader(os.path.join(root_path, idpath))
+        # save frame root path
+        self.framepath = os.path.join(root_path, frame_path)
+        self.idx2key, self.key2idx = id_loader(os.path.join(root_path, idpath), self.framepath)
 
         try:
             assert mode in ['train', 'val', 'test']
@@ -169,16 +174,12 @@ class ActivityNetCaptions(Dataset):
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.loads(f.read())
 
-        # save frame root path
-        self.frame_path = os.path.join(root_path, frame_path)
-
-        self.vidnum = len(self.meta)
-        self.data = preprocess(self.predata, self.meta, self.vidnum, self.key2idx)
-        print(self.data)
+        self.data = preprocess(self.predata, self.meta, self.key2idx)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.target_transform = target_transform
-        self.loader = get_loader
+        self.loader = get_loader()
+        self.vidnum = len(self.data)
 
     def __getitem__(self, index):
         """
@@ -205,9 +206,14 @@ class ActivityNetCaptions(Dataset):
         """
         id = self.data[index]['video_id']
         num_frames = self.data[index]['num_frames']
+        num_actions = self.data[index]['segments']
 
-        frame_indices = list(range(num_frames))
+        # get random action segment number from number of actions
+        clipnum = random.randint(0, num_actions-1)
+        startframe, endframe = self.data[index]['regions'][clipnum]
+        frame_indices = list(range(startframe, endframe+1))
 
+        path = os.path.join(self.framepath, id)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
         clip = self.loader(path, frame_indices)
@@ -216,15 +222,23 @@ class ActivityNetCaptions(Dataset):
             clip = [self.spatial_transform(img) for img in clip]
         clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
 
-        target = self.data[index]
+        caption = self.data[index]['captions'][clipnum]
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            caption = self.target_transform(target)
 
-        return clip, target
+        return clip, caption
 
     def __len__(self):
         return self.vidnum
 
 
 if __name__ == '__main__':
-    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames')
+    sp = spt.Compose([spt.CornerCrop(size=224), spt.ToTensor()])
+    tp = tpt.TemporalRandomCrop(16)
+    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames', spatial_transform=sp, temporal_transform=tp)
+    print(dset[0][0].size())
+    print(dset[0][1])
+
+
+
+
