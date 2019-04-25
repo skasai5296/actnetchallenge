@@ -2,6 +2,27 @@ import random
 import math
 
 
+class Compose(object):
+    """Composes several transforms together.
+    Args:
+        transforms (list of ``Transform`` objects): list of transforms to compose.
+    Example:
+        >>> transforms.Compose([
+        >>>     transforms.CenterCrop(10),
+        >>>     transforms.ToTensor(),
+        >>> ])
+    """
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, frame_indices):
+        out = frame_indices
+        for t in self.transforms:
+            out = t(out)
+        return out
+
+
 class LoopPadding(object):
 
     def __init__(self, size):
@@ -10,10 +31,11 @@ class LoopPadding(object):
     def __call__(self, frame_indices):
         out = frame_indices
 
-        for index in out:
-            if len(out) >= self.size:
-                break
-            out.append(index)
+        while len(out) < self.size:
+            for index in out:
+                if len(out) >= self.size:
+                    break
+                out.append(index)
 
         return out
 

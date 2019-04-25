@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 sys.path.append(os.pardir)
 from utils.utils import *
@@ -36,49 +37,48 @@ class Embedding(nn.Module):
 class RNNCaptioning(nn.Module):
     def __init__(self,
                  method='LSTM',
+                 ft_size=512,
                  emb_size=512,
                  lstm_memory=512,
                  vocab_size=100,
-                 max_seqlen=20
+                 max_seqlen=20,
+                 num_layers=1
                  ):
         super(RNNCaptioning, self).__init__()
         self.method = method
+        self.ft_size = ft_size
         self.emb_size = emb_size
         self.lstm_memory = lstm_memory
         self.vocab_size = vocab_size
         self.max_seqlen = max_seqlen
+        self.num_layers = num_layers
 
+        self.linear1 = nn.Linear(self.ft_size, self.lstm_memory)
         self.emb = nn.Embedding(self.vocab_size, self.emb_size)
         if method == 'LSTM':
-            self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
-        self.linear = nn.Linear(self.lstm_memory, self.vocab_size)
-        self.softmax = nn.Softmax()
+            self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True)
+        self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
 
     # THWC must be flattened for image feature
-    # image_feature : (batch_size, lstm_memory)
-    # x : (batch_size, seq_len) (LongTensor of indexes)
-    def forward(self, image_feature, x):
+    # image_feature : (batch_size, ft_size)
+    # x : (batch_size, seq_len) (LongTensor of indexes, padded sequence)
+    # lengths : (batch_size,) (LongTensor of lengths)
+    # returns : PackedSequence
+    def forward(self, image_feature, x, lengths):
+        seqlen = x.size(1)
+        # h0 : (1, batch_size, lstm_memory)
+        h0 = self.linear1(image_feature).unsqueeze(0).repeat(self.num_layers, 1, 1)
+        c0 = torch.zeros_like(h0)
         # emb_seq : (batch_size, seq_len, emb_size)
         emb_seq = self.emb(x)
-        batch_size = image_feature.size(0)
-        seq_len = x.size(1)
-        # emb_seq : (seq_len, batch_size, emb_size)
-        emb_seq = emb_seq.transpose(1, 0)
-        # hx : (batch_size, lstm_memory)
-        hx = image_feature
-        # cx : (batch_size, lstm_memory)
-        cx = torch.randn_like(hx)
-        output = []
-        # xthemb : (seq_len)
-        # (hx, cx) : (batch_size, vocab_size)
-        for xthemb in emb_seq:
-            hx, cx = self.rnn(xthemb, (hx, cx))
-            output.append(hx)
-        # output : (batch_size, seq_len, lstm_memory)
-        output = torch.stack(output, dim=0).transpose(0, 1)
-        # output : (batch_size, seq_len, vocab_size)
-        output = self.softmax(self.linear(output))
-        return output
+        # packed : (batch_size, seq_len, emb_size), PackedSequence
+        packed = pack_padded_sequence(emb_seq, lengths, batch_first=True)
+        # out : (batch_size, seq_len, lstm_memory), PackedSequence
+        out, (hn, cn) = self.rnn(packed, (h0, c0))
+        # out[0] : (batch_size, seq_len, lstm_memory)
+        # outputs : (batch_size, seq_len, vocab_size)
+        outputs = self.linear2(out[0])
+        return outputs
 
     # feature : (batch_size, lstm_memory)
     # bos : torch.zeros(batch_size) (LongTensor, indices of <BOS>)

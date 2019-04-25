@@ -12,6 +12,7 @@ from torch.utils.data import Dataset
 sys.path.append(os.pardir)
 import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
+from langmodels.vocab import tokenize
 
 # video loader.
 # loads frame indices and gets the images from each frame
@@ -40,10 +41,8 @@ def get_default_image_loader():
         return pil_loader
 
 def pil_loader(path):
-    # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    with open(path, 'rb') as f:
-        with Image.open(f) as img:
-            return img.convert('RGB')
+    with Image.open(path) as img:
+        return img.convert('RGB')
 
 def accimage_loader(path):
     try:
@@ -142,6 +141,7 @@ class ActivityNetCaptions(Dataset):
                  root_path,
                  metadata,
                  mode,
+                 vocab,
                  frame_path='frames',
                  is_adaptively_dilated=False,
                  n_samples_for_each_video=1,
@@ -172,7 +172,7 @@ class ActivityNetCaptions(Dataset):
 
         # load metadata files
         with open(os.path.join(root_path, metadata)) as f:
-            self.meta = json.loads(f.read())
+            self.meta = json.load(f)
 
         self.data = preprocess(self.predata, self.meta, self.key2idx)
         self.spatial_transform = spatial_transform
@@ -180,51 +180,60 @@ class ActivityNetCaptions(Dataset):
         self.target_transform = target_transform
         self.loader = get_loader()
         self.vidnum = len(self.data)
+        self.vocab = vocab
+        self.sample_duration = sample_duration
 
     def __getitem__(self, index):
         """
         Args:
             index (int): Index
         Returns:
-            tuple: (image, segments) where target is class_index of the target class.
+            tuple: (clip, caption)
+            clip : torch.Tensor of size (C, T, H, W)
+            caption : torch.LongTensor of size (*,)
         """
 
-        """
-        preprocess object from activitynet captions dataset.
-        concats metadata into data.
-        data attributes: list of dict. list index is the index of video, dict is info about video.
-        dict : {
-            'video_id'      : str, shows the video id.
-            'framerate'     : float, shows the framerate per second
-            'num_frames'    : int, total number of frames in the video
-            'width'         : int, the width of video in pixels
-            'height'        : int, the height of video in pixels
-            'regions'       : [[int, int], [int, int], ...], list including start and end frames of actions
-            'captions'      : [str, str, ...], list including captions for each action
-            'segments'      : int, number of actions
-        }
-        """
-        id = self.data[index]['video_id']
-        num_frames = self.data[index]['num_frames']
-        num_actions = self.data[index]['segments']
+        # fetch different index for incomplete data
+        while True:
+            try:
+                tmp = self.data[index]['segments']
+            except KeyError:
+                index = random.randint(0, self.vidnum-1)
+                continue
 
-        # get random action segment number from number of actions
-        clipnum = random.randint(0, num_actions-1)
-        startframe, endframe = self.data[index]['regions'][clipnum]
-        frame_indices = list(range(startframe, endframe+1))
+            id = self.data[index]['video_id']
+            num_frames = self.data[index]['num_frames']
+            num_actions = self.data[index]['segments']
 
-        path = os.path.join(self.framepath, id)
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
-        clip = self.loader(path, frame_indices)
-        if self.spatial_transform is not None:
-            self.spatial_transform.randomize_parameters()
-            clip = [self.spatial_transform(img) for img in clip]
-        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+            # get random action segment number from number of actions
+            clipnum = random.randint(0, num_actions-1)
+            startframe, endframe = self.data[index]['regions'][clipnum]
+            frame_indices = list(range(startframe, endframe+1))
 
-        caption = self.data[index]['captions'][clipnum]
-        if self.target_transform is not None:
-            caption = self.target_transform(target)
+            path = os.path.join(self.framepath, id)
+            if self.temporal_transform is not None:
+                frame_indices = self.temporal_transform(frame_indices)
+            clip = self.loader(path, frame_indices)
+            if self.spatial_transform is not None:
+                self.spatial_transform.randomize_parameters()
+                clip = [self.spatial_transform(img) for img in clip]
+
+            try:
+                clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+            except:
+                index = random.randint(0, self.vidnum-1)
+                continue
+
+            # retry when clip is not expected size (for some reason)
+            try:
+                assert clip.size() == (3, 16, 224, 224)
+            except AssertionError:
+                index = random.randint(0, self.vidnum-1)
+                continue
+
+            caption = self.data[index]['captions'][clipnum]
+            caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
+            break
 
         return clip, caption
 
@@ -232,9 +241,10 @@ class ActivityNetCaptions(Dataset):
         return self.vidnum
 
 
+
 if __name__ == '__main__':
     sp = spt.Compose([spt.CornerCrop(size=224), spt.ToTensor()])
-    tp = tpt.TemporalRandomCrop(16)
+    tp = tpt.Compose([tpt.TemporalRandomCrop(16), tpt.LoopPadding(16)])
     dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames', spatial_transform=sp, temporal_transform=tp)
     print(dset[0][0].size())
     print(dset[0][1])

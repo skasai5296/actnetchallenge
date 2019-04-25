@@ -136,13 +136,17 @@ class ResNet(nn.Module):
             block, 512, layers[3], shortcut_type, stride=2)
         last_duration = int(math.ceil(sample_duration / 16))
         last_size = int(math.ceil(sample_size / 32))
+
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
+        """
+        # deleted for extracting features
         self.fc = nn.Linear(512 * block.expansion, num_classes)
+        """
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
             elif isinstance(m, nn.BatchNorm3d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -183,10 +187,13 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
+        # deleted for extracting features
         x = self.avgpool(x)
 
+        """
         x = x.view(x.size(0), -1)
         x = self.fc(x)
+        """
 
         return x
 
@@ -259,3 +266,4 @@ def resnet200(**kwargs):
     """
     model = ResNet(Bottleneck, [3, 24, 36, 3], **kwargs)
     return model
+
