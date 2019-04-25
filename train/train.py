@@ -124,7 +124,8 @@ if __name__ == '__main__':
 
         enc_save_path = os.path.join(model_path, "{}_{}".format("resnet", "10"), "ep{}".format(ep+1))
         dec_save_path = os.path.join(model_path, "{}_{}".format(rnnmethod, lstm_stacks), "ep{}".format(ep+1))
-        torch.save()
+        torch.save(video_encoder.state_dict(), enc_save_path)
+        torch.save(caption_gen.state_dict(), dec_save_path)
 
 
 

@@ -4,8 +4,12 @@ repo for activity net challenge 2019
 TO-DO:
 - [x] complete script for downloading ActivityNet videos
 - [x] complete script for converting .mp4 videos to .jpg frames
-- [ ] write dataset class for ActivityNet Captions dataset
-- [ ] write model for learning from pretrained features of videos
+- [x] write dataset class for ActivityNet Captions dataset
+- [x] write model for training
+- [ ] add optional training
+- [ ] add validation and testing code
+- [ ] add BERT training
+- [ ] add character level training
 - [ ] merge code
 
 ## How to download ActivityNet Captions Dataset
@@ -17,6 +21,9 @@ TO-DO:
 
 ## How to convert video files to image files
 1. Modify `convert.sh` and fix the command line argument for root directory and where to put the metadata.
-1. Make sure you have at least 2TB and enough Inodes on your storage.
+1. Make sure you have at least 1TB and enough Inodes left on your storage.
 1. `bash convert.sh`
 
+## Training procedures
+1. run `getmeta.py` to fetch metadata (framerate, duration, video ids, ...) and obtain a json file with metadata
+1. run `train.py` with configurations

@@ -1,6 +1,6 @@
 # files for me
-
-
+*.log
+models/
 
 
 # Byte-compiled / optimized / DLL files
