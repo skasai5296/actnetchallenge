@@ -211,6 +211,10 @@ class ActivityNetCaptions(Dataset):
             frame_indices = list(range(startframe, endframe+1))
 
             path = os.path.join(self.framepath, id)
+            # retry when frame indices returns an empty list, result in infinite loop
+            if len(frame_indices) == 0:
+                index = random.randint(0, self.vidnum-1)
+                continue
             if self.temporal_transform is not None:
                 frame_indices = self.temporal_transform(frame_indices)
             clip = self.loader(path, frame_indices)
@@ -226,7 +230,7 @@ class ActivityNetCaptions(Dataset):
 
             # retry when clip is not expected size (for some reason)
             try:
-                assert clip.size() == (3, 16, 224, 224)
+                assert clip.size(1) == self.sample_duration
             except AssertionError:
                 index = random.randint(0, self.vidnum-1)
                 continue
