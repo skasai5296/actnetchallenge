@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, default=64)
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--n_cpu', type=int, default=8)
+    parser.add_argument('--feature_size', type=int, default=512)
     parser.add_argument('--lstm_memory', type=int, default=512)
     parser.add_argument('--embedding_size', type=int, default=512)
     parser.add_argument('--max_seqlen', type=int, default=30)
@@ -138,7 +139,7 @@ if __name__ == '__main__':
         # flow through model
         with torch.no_grad():
             feature = video_encoder(clip)
-            feature = feature.view(args.batch_size, args.embedding_size)
+            feature = feature.view(args.batch_size, args.feature_size)
             caption = caption_gen.decode(feature, captions)
             caption = vocab.return_sentence(caption)
             for b in range(args.batch_size):

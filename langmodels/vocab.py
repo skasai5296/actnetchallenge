@@ -133,9 +133,6 @@ class Vocabulary():
 
         return sentence
 
-    # TODO: add pretrained weights.
-    def add_pretrained(self, jsonpath):
-        pass
 
     def __len__(self):
         return len(self.idx2obj)

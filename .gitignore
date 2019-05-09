@@ -3,6 +3,7 @@
 *.ckpt
 models/
 logs/
+wordvectors/
 
 
 # Byte-compiled / optimized / DLL files

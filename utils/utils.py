@@ -28,6 +28,16 @@ def collater(datas, token_level=False):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+def get_pretrained_from_txt(path):
+    with open(path, "r") as f:
+        lookup = {}
+        for line in f:
+            emb = line.rstrip().split()
+            token = emb[0]
+            vec = [float(num) for num in emb[1:]]
+            lookup[token] = vec
+    return lookup
+
 
 def weight_init(m):
     '''

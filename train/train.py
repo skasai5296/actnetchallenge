@@ -17,44 +17,15 @@ from utils.utils import *
 from langmodels.lstm import RNNCaptioning
 from langmodels.bert import Bert
 from langmodels.vocab import Vocabulary
-from imagemodels.resnet import resnet10, resnet18, resnet34, resnet50, resnet101, resnet152, resnet200
+import imagemodels.resnet as resnet
 from dataset.activitynet_captions import ActivityNetCaptions
 import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
 
-if __name__ == '__main__':
+from options import parse_args
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--root_path', type=str, default='/ssd1/dsets/activitynet_captions')
-    parser.add_argument('--model_path', type=str, default='../models')
-    parser.add_argument('--meta_path', type=str, default='videometa_train.json')
-    parser.add_argument('--mode', type=str, default='train')
-    parser.add_argument('--framepath', type=str, default='frames')
-    parser.add_argument('--annpath', type=str, default='train.json')
-    parser.add_argument('--cnnmethod', type=str, default='resnet')
-    parser.add_argument('--rnnmethod', type=str, default='LSTM')
-    parser.add_argument('--vocabpath', type=str, default='vocab.json')
-    parser.add_argument('--start_from_ep', type=int, default=0)
-    parser.add_argument('--lstm_pretrain_ep', type=int, default=20)
-    parser.add_argument('--log_every', type=int, default=10)
-    parser.add_argument('--lstm_stacks', type=int, default=1)
-    parser.add_argument('--num_layers', type=int, default=10)
-    parser.add_argument('--imsize', type=int, default=224)
-    parser.add_argument('--clip_len', type=int, default=16)
-    parser.add_argument('--bs', type=int, default=64)
-    parser.add_argument('--n_cpu', type=int, default=8)
-    parser.add_argument('--lstm_memory', type=int, default=512)
-    parser.add_argument('--embedding_size', type=int, default=512)
-    parser.add_argument('--feature_size', type=int, default=512)
-    parser.add_argument('--max_seqlen', type=int, default=30)
-    parser.add_argument('--max_epochs', type=int, default=20)
-    parser.add_argument('--lr', type=float, default=1e-2)
-    parser.add_argument('--momentum', type=int, default=0.9)
-    parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--token_level', action='store_true')
-    parser.add_argument('--cuda', action='store_false')
-    parser.add_argument('--dataparallel', action='store_false')
-    args = parser.parse_args()
+if __name__ == '__main__':
+    args = parse_args()
 
     print(args)
 
@@ -81,7 +52,7 @@ if __name__ == '__main__':
     max_it = int(len(train_dset) / args.bs)
 
     # models
-    video_encoder = resnet10(sample_size=args.imsize, sample_duration=args.clip_len)
+    video_encoder = getattr(args.cnnmethod, args.cnnmethod+args.num_layers)(sample_size=args.imsize, sample_duration=args.clip_len)
     caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     models = [video_encoder, caption_gen]
 
@@ -103,6 +74,18 @@ if __name__ == '__main__':
             video_encoder.apply(weight_init)
             caption_gen.apply(weight_init)
             print("didn't find file, starting encoder, decoder from scratch")
+
+    # initialize pretrained embeddings
+    if args.emb_init is not None:
+        lookup = get_pretrained_from_txt(args.emb_init)
+        assert len(list(lookup.values())[0]) == args.embedding_size
+        matrix = torch.randn_like(caption_gen.emb.weight)
+        for char, vec in lookup.items():
+            if char in vocab.obj2idx.keys():
+                id = vocab.obj2idx[char]
+                matrix[id, :] = torch.tensor(vec)
+        caption_gen.init_embedding(matrix)
+        print("succesfully initialized embeddings from {}".format(args.emb_init))
 
     # move models to device
     video_encoder = video_encoder.to(device)
@@ -180,6 +163,8 @@ if __name__ == '__main__':
         else:
             torch.save(caption_gen.state_dict(), dec_save_path)
         print("saved pretrained decoder model to {}".format(dec_save_path))
+        scheduler.step(nll.cpu().item())
+
 
     # joint training loop
     print("start training")

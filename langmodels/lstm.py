@@ -62,6 +62,9 @@ class RNNCaptioning(nn.Module):
         self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
         self.dropout = nn.Dropout(p=dropout_p)
 
+    def init_embedding(self, tensor):
+        self.emb.weight.data.copy_(tensor)
+
     # THWC must be flattened for image feature
     # image_feature : (batch_size, ft_size)
     # captions : (batch_size, seq_len) (LongTensor of indexes, padded sequence)
