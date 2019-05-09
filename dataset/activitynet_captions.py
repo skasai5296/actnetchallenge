@@ -249,7 +249,7 @@ class ActivityNetCaptions(Dataset):
 if __name__ == '__main__':
     sp = spt.Compose([spt.CornerCrop(size=224), spt.ToTensor()])
     tp = tpt.Compose([tpt.TemporalRandomCrop(16), tpt.LoopPadding(16)])
-    dset = ActivityNetCaptions('../../../ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames', spatial_transform=sp, temporal_transform=tp)
+    dset = ActivityNetCaptions('/ssd1/dsets/activitynet_captions', 'videometa_train.json', 'train', 'frames', spatial_transform=sp, temporal_transform=tp)
     print(dset[0][0].size())
     print(dset[0][1])
 

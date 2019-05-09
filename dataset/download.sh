@@ -6,4 +6,4 @@
 # -j : json file relative path. should be downloaded from activitynet
 # -t : target path to save videos. default is 'videos' folder in root path.
 
-nohup python preparedataset.py -d ~/ssd1/dsets/activitynet_captions > out.log &!
+nohup python preparedataset.py -d /ssd2/dsets/activitynet_captions > out.log &!

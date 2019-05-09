@@ -91,8 +91,8 @@ def vid2frames(video_path, tar_path, idfiles, shorter):
 
 def main(args):
     idsdir = [os.path.join(args.rootdir, file) for file in args.idfiles]
-    videodir = os.path.join(args.rootdir, args.videodir)
-    savedir = os.path.join(args.rootdir, args.savedir)
+    videodir = args.videodir
+    savedir = args.savedir
 
     idfiles = get_actnetcaption_ids(idsdir)
 
@@ -106,10 +106,10 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--rootdir', type=str, default='../../../ssd1/dsets/activitynet_captions')
-    parser.add_argument('--idfiles', type=list, default=['train_ids.json'])
-    parser.add_argument('--videodir', type=str, default='videos')
-    parser.add_argument('--savedir', type=str, default='frames')
+    parser.add_argument('--rootdir', type=str, default='/ssd2/dsets/activitynet_captions')
+    parser.add_argument('--idfiles', type=list, default=['val_ids.json', 'test_ids.json'])
+    parser.add_argument('--videodir', type=str, default='/ssd2/dsets/activitynet_captions/videos')
+    parser.add_argument('--savedir', type=str, default='/ssd2/dsets/activitynet_captions/frames')
     parser.add_argument('--shorter', type=int, default=224)
     args = parser.parse_args()
     main(args)

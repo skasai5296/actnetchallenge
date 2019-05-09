@@ -31,7 +31,7 @@ def tokenize(sentence, token_level=False):
     return tokens
 
 
-# Vocabulary class. set cshow to True for character-level training
+# Vocabulary class. set token_level to True for character-level training
 class Vocabulary():
     def __init__(self, token_level=False):
         self.idx2obj = []
@@ -40,12 +40,13 @@ class Vocabulary():
         self.idx2obj.append('<EOS>')
         self.idx2obj.append('<UNK>')
         self.idx2obj.append('<NUM>')
+        self.len = 4
         self.set_obj2idx()
         self.token_level = token_level
 
     def set_obj2idx(self):
         for idx, obj in enumerate(self.idx2obj):
-            self.obj2idx[obj] = idx 
+            self.obj2idx[obj] = idx
 
     # add vocab from json file including corpus.
     # DESIGNED SPECIFICALLY FOR ACTIVITYNET CAPTIONS
@@ -61,7 +62,7 @@ class Vocabulary():
 
     # add strings (sentences or single tokens, not chars) to dictionary
     def add_sentence(self, sentence):
-        for token in tokenize(sentence, self.token_level):
+        for token in tokenize(sentence, token_level=self.token_level):
             if token not in self.idx2obj:
                 self.idx2obj.append(token)
                 self.obj2idx[token] = self.len
@@ -88,15 +89,49 @@ class Vocabulary():
     def return_idx(self, sentence):
         idxs = []
         if not self.token_level:
-            for cleaned in tokenize(sentence, self.token_level):
+            for cleaned in tokenize(sentence, token_level=self.token_level):
                 try:
                     idxs.append(self.obj2idx[cleaned])
                 except KeyError:
                     idxs.append(self.obj2idx['<UNK>'])
         else:
-            for char in sentence:
+            for char in sentence.lstrip(' '):
                 idxs.append(self.obj2idx[char])
         return idxs
+
+    # return sentence from given index list
+    # idxlist : torch.Tensor, (bs, *)
+    def return_sentence(self, idxlist):
+        idxlist = idxlist.cpu().tolist()
+        sentences = []
+        for idlist in idxlist:
+            sentence = []
+            for tokenid in idlist:
+                token = self.idx2obj[tokenid]
+                sentence.append(token)
+                if token == '<EOS>':
+                    break
+            if not self.token_level:
+                sentence = " ".join(sentence)
+            else:
+                sentence = "".join(sentence)
+            sentences.append(sentence)
+
+        return sentences
+
+    def _return_sentence(self, idxlist):
+        sentence = []
+        for tokenid in idxlist:
+            token = self.idx2obj[tokenid]
+            sentence.append(token)
+            if token == '<EOS>':
+                break
+        if not self.token_level:
+            sentence = " ".join(sentence)
+        else:
+            sentence = "".join(sentence)
+
+        return sentence
 
     # TODO: add pretrained weights.
     def add_pretrained(self, jsonpath):
@@ -112,5 +147,8 @@ if __name__ == '__main__':
     vocab = Vocabulary(token_level=False)
     vocab.add_sentence(sentence)
     print(vocab.idx2obj)
-    print(vocab.return_idx(sentence))
+    idxs = vocab.return_idx(sentence)
+    print(idxs)
+    cap = vocab._return_sentence(idxs)
+    print(cap)
 

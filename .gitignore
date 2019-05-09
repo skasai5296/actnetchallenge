@@ -1,6 +1,8 @@
 # files for me
 *.log
+*.ckpt
 models/
+logs/
 
 
 # Byte-compiled / optimized / DLL files

@@ -42,7 +42,8 @@ class RNNCaptioning(nn.Module):
                  lstm_memory=512,
                  vocab_size=100,
                  max_seqlen=20,
-                 num_layers=1
+                 num_layers=1,
+                 dropout_p=0.5
                  ):
         super(RNNCaptioning, self).__init__()
         self.method = method
@@ -53,55 +54,65 @@ class RNNCaptioning(nn.Module):
         self.max_seqlen = max_seqlen
         self.num_layers = num_layers
 
-        self.linear1 = nn.Linear(self.ft_size, self.lstm_memory)
+        self.linear1 = nn.Linear(self.ft_size, self.emb_size)
         self.emb = nn.Embedding(self.vocab_size, self.emb_size)
         if method == 'LSTM':
-            self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True)
+            #self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True)
+            self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
         self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
+        self.dropout = nn.Dropout(p=dropout_p)
 
     # THWC must be flattened for image feature
     # image_feature : (batch_size, ft_size)
-    # x : (batch_size, seq_len) (LongTensor of indexes, padded sequence)
+    # captions : (batch_size, seq_len) (LongTensor of indexes, padded sequence)
     # lengths : (batch_size,) (LongTensor of lengths)
-    # returns : PackedSequence
-    def forward(self, image_feature, x, lengths):
-        seqlen = x.size(1)
-        # h0 : (1, batch_size, lstm_memory)
-        h0 = self.linear1(image_feature).unsqueeze(0).repeat(self.num_layers, 1, 1)
-        c0 = torch.zeros_like(h0)
-        # emb_seq : (batch_size, seq_len, emb_size)
-        emb_seq = self.emb(x)
-        # packed : (batch_size, seq_len, emb_size), PackedSequence
-        packed = pack_padded_sequence(emb_seq, lengths, batch_first=True)
-        # out : (batch_size, seq_len, lstm_memory), PackedSequence
-        out, (hn, cn) = self.rnn(packed, (h0, c0))
-        # out[0] : (batch_size, seq_len, lstm_memory)
-        # outputs : (batch_size, seq_len, vocab_size)
-        outputs = self.linear2(out[0])
-        return outputs
+    # returns : list of tensors of size (batch_size, vocab_size), list of ints (lengths) to backward for each caption
+    def forward(self, image_feature, captions, lengths, init_state=None):
+        # feature : (batch_size, emb_size)
+        feature = self.linear1(image_feature)
+        # h_n, c_n : (batch_size, lstm_memory)
+        h_n, c_n = self.rnn(feature, init_state)
+        # token1 : (batch_size, vocab_size)
+        token1 = self.linear2(h_n)
+        outputlist = [token1]
+        # captions : (seq_len, batch_size, emb_size)
+        captions = self.emb(captions).transpose(0, 1)
+        idx = 0
+        maxlen = min(self.max_seqlen, captions.size(0))
+        while idx < maxlen-1:
+            # h_n : (batch_size, lstm_memory)
+            (h_n, c_n) = self.rnn(captions[idx], (h_n, c_n))
+            # tokenn : (batch_size, vocab_size)
+            tokenn = self.dropout(self.linear2(h_n))
+            outputlist.append(tokenn)
+            idx += 1
+        # outcaption : would be tensor of size (batch_size, maxlen, vocab_size)
+        outcaption = torch.stack(outputlist).transpose(0, 1)
+        lengths = [min(length, self.max_seqlen) for length in lengths]
+        outputs = pack_padded_sequence(outcaption, lengths, batch_first=True)
+        return outcaption, lengths
 
-    # feature : (batch_size, lstm_memory)
-    # bos : torch.zeros(batch_size) (LongTensor, indices of <BOS>)
-    def decode(self, batch_size, bos, image_feature, method='greedy'):
-        sentences = [0] * batch_size
-        with torch.no_grad():
-            # emb_word : (batch_size, emb_size)
-            emb_word = self.emb(bos)
-            batch_size = image_feature.size(0)
-            for i in range(self.max_seqlen):
-                # hx : (batch_size, lstm_memory)
-                hx = image_feature
-                # cx : (batch_size, lstm_memory)
-                cx = random.randn(batch_size, self.lstm_memory)
-                hx, cx = self.rnn(emb_word, (hx, cx))
-                # output : (batch_size, vocab_size)
-                output = self.linear(hx)
-                # wordidx : (batch_size)
-                wordidx = torch.argmax(hx, dim=1)
-                emb_word = self.emb(wordidx)
-                for bs in batch_size:
-                    sentences[bs].append(wordidx[bs].item())
-        return sentences
+    # image_feature : (batch_size, ft_size)
+    # method : one of ['greedy', 'beamsearch']
+    def decode(self, image_feature, method='greedy', init_state=None):
+        outputlist = []
+        # feature : (batch_size, emb_size)
+        feature = self.linear1(image_feature)
+        # h_n, c_n : (batch_size, lstm_memory)
+        h_n, c_n = self.rnn(feature, init_state)
+        for idx in range(self.max_seqlen):
+            # o_n : (batch_size, vocab_size)
+            o_n = self.linear2(h_n)
+            # tokenid : (batch_size,)
+            tokenid = o_n.argmax(dim=1)
+            outputlist.append(tokenid)
+            # inputs : (batch_size, emb_size)
+            inputs = self.emb(tokenid)
+            # h_n : (batch_size, lstm_memory)
+            (h_n, c_n) = self.rnn(inputs, (h_n, c_n))
+        # outcaption : would be tensor of size (batch_size, max_seqlen)
+        outcaption = torch.stack(outputlist).transpose(0, 1)
+        return outcaption
 
     # TODO
     def init_pretrained_weights(self, vocab):
