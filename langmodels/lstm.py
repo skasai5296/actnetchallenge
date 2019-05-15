@@ -43,7 +43,7 @@ class RNNCaptioning(nn.Module):
                  vocab_size=100,
                  max_seqlen=20,
                  num_layers=1,
-                 dropout_p=0.5
+                 dropout_p=0.1
                  ):
         super(RNNCaptioning, self).__init__()
         self.method = method

@@ -16,6 +16,7 @@ sys.path.append(os.pardir)
 from utils.utils import *
 from langmodels.lstm import RNNCaptioning
 from langmodels.bert import Bert
+from langmodels.transformer import Transformer
 from langmodels.vocab import Vocabulary
 import imagemodels.resnet as resnet
 from dataset.activitynet_captions import ActivityNetCaptions
@@ -55,6 +56,8 @@ if __name__ == '__main__':
     # models
     video_encoder = generate_model(args)
     caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
+    # caption_gen = Transformer(n_src_vocab=vocab_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
+    #                           n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, emb_src_tgt_weight_sharing=True):
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
