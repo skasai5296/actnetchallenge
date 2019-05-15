@@ -139,10 +139,8 @@ class ResNet(nn.Module):
 
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
-        """
-        # deleted for extracting features
+
         self.fc = nn.Linear(512 * block.expansion, num_classes)
-        """
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
@@ -187,9 +185,9 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        # deleted for extracting features
         x = self.avgpool(x)
 
+        # deleted for extracting features
         """
         x = x.view(x.size(0), -1)
         x = self.fc(x)

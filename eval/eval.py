@@ -21,24 +21,84 @@ from imagemodels.resnet import resnet10, resnet18, resnet34, resnet50, resnet101
 from dataset.activitynet_captions import ActivityNetCaptions
 import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
+from utils.makemodel import generate_model
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--n_classes',
+        default=400,
+        type=int,
+        help=
+        'Number of classes (activitynet: 200, kinetics: 400, ucf101: 101, hmdb51: 51)'
+    )
+    parser.add_argument(
+        '--n_finetune_classes',
+        default=400,
+        type=int,
+        help=
+        'Number of classes for fine-tuning. n_classes is set to the number when pretraining.'
+    )
+    parser.add_argument(
+        '--sample_size',
+        default=112,
+        type=int,
+        help='Height and width of inputs')
+    parser.add_argument(
+        '--sample_duration',
+        default=16,
+        type=int,
+        help='Temporal duration of inputs')
+    parser.add_argument(
+        '--pretrain_path', default='', type=str, help='Pretrained model (.pth)')
+    parser.add_argument(
+        '--ft_begin_index',
+        default=0,
+        type=int,
+        help='Begin block index of fine-tuning')
+    parser.add_argument(
+        '--norm_value',
+        default=1,
+        type=int,
+        help=
+        'If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
+    parser.add_argument(
+        '--modelname',
+        default='resnet',
+        type=str,
+        help='(resnet | preresnet | wideresnet | resnext | densenet | ')
+    parser.add_argument(
+        '--modeldepth',
+        default=18,
+        type=int,
+        help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
+    parser.add_argument(
+        '--resnet_shortcut',
+        default='B',
+        type=str,
+        help='Shortcut type of resnet (A | B)')
+    parser.add_argument(
+        '--wide_resnet_k', default=2, type=int, help='Wide resnet k')
+    parser.add_argument(
+        '--resnext_cardinality',
+        default=32,
+        type=int,
+        help='ResNeXt cardinality')
+    parser.add_argument(
+        '--manual_seed', default=1, type=int, help='Manually set random seed')
     parser.add_argument('--root_path', type=str, default='/ssd1/dsets/activitynet_captions')
     parser.add_argument('--model_path', type=str, default='../models')
     parser.add_argument('--meta_path', type=str, default='videometa_train.json')
     parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--framepath', type=str, default='frames')
     parser.add_argument('--annpath', type=str, default='train.json')
-    parser.add_argument('--cnnmethod', type=str, default='resnet')
     parser.add_argument('--rnnmethod', type=str, default='LSTM')
     parser.add_argument('--vocabpath', type=str, default='vocab.json')
     parser.add_argument('--lstm_pretrain_ep', type=int, default=None)
     parser.add_argument('--model_ep', type=int, default=500)
     parser.add_argument('--log_every', type=int, default=10)
     parser.add_argument('--lstm_stacks', type=int, default=1)
-    parser.add_argument('--num_layers', type=int, default=10)
     parser.add_argument('--imsize', type=int, default=224)
     parser.add_argument('--clip_len', type=int, default=16)
     parser.add_argument('--bs', type=int, default=64)
@@ -80,8 +140,8 @@ if __name__ == '__main__':
     max_it = int(len(dset) / args.batch_size)
 
     # models
-    video_encoder = resnet10(sample_size=args.imsize, sample_duration=args.clip_len)
-    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen)
+    video_encoder, params = generate_model(args)
+    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
@@ -99,7 +159,7 @@ if __name__ == '__main__':
     else:
         offset = args.model_ep
         if offset > 0:
-            enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.cnnmethod, args.num_layers), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+            enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             enc_filename = "ep{:04d}.ckpt".format(offset)
             enc_model_path = os.path.join(enc_model_dir, enc_filename)
             dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))

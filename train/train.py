@@ -23,6 +23,7 @@ import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
 
 from options import parse_args
+from utils.makemodel import generate_model
 
 if __name__ == '__main__':
     args = parse_args()
@@ -52,14 +53,14 @@ if __name__ == '__main__':
     max_it = int(len(train_dset) / args.bs)
 
     # models
-    video_encoder = getattr(args.cnnmethod, args.cnnmethod+args.num_layers)(sample_size=args.imsize, sample_duration=args.clip_len)
-    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
+    video_encoder = generate_model(args)
+    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
     offset = args.start_from_ep
     if offset != 0:
-        enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.cnnmethod, args.num_layers), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         enc_filename = "ep{:04d}.ckpt".format(offset)
         enc_model_path = os.path.join(enc_model_dir, enc_filename)
         dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod, args.lstm_stacks), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
@@ -208,7 +209,7 @@ if __name__ == '__main__':
         print("epoch {:04d}/{:04d} done, loss: {:.06f}".format(ep+1, args.max_epochs, nll.cpu().item()), flush=True)
 
         # save models
-        enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.cnnmethod, args.num_layers), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         enc_filename = "ep{:04d}.ckpt".format(ep+1)
         enc_save_path = os.path.join(enc_save_dir, enc_filename)
         dec_save_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))

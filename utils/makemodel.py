@@ -1,204 +1,123 @@
 import torch
 from torch import nn
 
-from models import resnet, pre_act_resnet, wide_resnet, resnext, densenet
+from imagemodels import resnet, pre_act_resnet, wide_resnet, resnext, densenet
 
 
 def generate_model(opt):
-    assert opt.model in [
+    assert opt.modelname in [
         'resnet', 'preresnet', 'wideresnet', 'resnext', 'densenet'
     ]
+    opt.arch = "{}-{}".format(opt.modelname, opt.modeldepth)
 
-    if opt.model == 'resnet':
-        assert opt.model_depth in [10, 18, 34, 50, 101, 152, 200]
+    if opt.modelname == 'resnet':
+        assert opt.modeldepth in [10, 18, 34, 50, 101, 152, 200]
 
-        from models.resnet import get_fine_tuning_parameters
+        from imagemodels.resnet import get_fine_tuning_parameters
 
-        if opt.model_depth == 10:
-            model = resnet.resnet10(
+        model = getattr(resnet, opt.modelname + str(opt.modeldepth))(
                 num_classes=opt.n_classes,
                 shortcut_type=opt.resnet_shortcut,
                 sample_size=opt.sample_size,
                 sample_duration=opt.sample_duration)
-        elif opt.model_depth == 18:
-            model = resnet.resnet18(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 34:
-            model = resnet.resnet34(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 50:
-            model = resnet.resnet50(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 101:
-            model = resnet.resnet101(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 152:
-            model = resnet.resnet152(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 200:
-            model = resnet.resnet200(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-    elif opt.model == 'wideresnet':
-        assert opt.model_depth in [50]
+    elif opt.modelname == 'wideresnet':
+        assert opt.modeldepth in [50]
 
-        from models.wide_resnet import get_fine_tuning_parameters
+        from imagemodels.wide_resnet import get_fine_tuning_parameters
 
-        if opt.model_depth == 50:
-            model = wide_resnet.resnet50(
+        if opt.modeldepth == 50:
+            model = getattr(wide_resnet, "resnet" + str(opt.modeldepth))(
                 num_classes=opt.n_classes,
                 shortcut_type=opt.resnet_shortcut,
                 k=opt.wide_resnet_k,
                 sample_size=opt.sample_size,
                 sample_duration=opt.sample_duration)
-    elif opt.model == 'resnext':
-        assert opt.model_depth in [50, 101, 152]
+    elif opt.modelname == 'resnext':
+        assert opt.modeldepth in [50, 101, 152]
 
-        from models.resnext import get_fine_tuning_parameters
+        from imagemodels.resnext import get_fine_tuning_parameters
 
-        if opt.model_depth == 50:
-            model = resnext.resnet50(
+        model = getattr(resnext, "resnet" + str(opt.modeldepth))(
                 num_classes=opt.n_classes,
                 shortcut_type=opt.resnet_shortcut,
                 cardinality=opt.resnext_cardinality,
                 sample_size=opt.sample_size,
                 sample_duration=opt.sample_duration)
-        elif opt.model_depth == 101:
-            model = resnext.resnet101(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                cardinality=opt.resnext_cardinality,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 152:
-            model = resnext.resnet152(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                cardinality=opt.resnext_cardinality,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-    elif opt.model == 'preresnet':
-        assert opt.model_depth in [18, 34, 50, 101, 152, 200]
+    elif opt.modelname == 'preresnet':
+        assert opt.modeldepth in [18, 34, 50, 101, 152, 200]
 
-        from models.pre_act_resnet import get_fine_tuning_parameters
+        from imagemodels.pre_act_resnet import get_fine_tuning_parameters
+        model = getattr(pre_act_resnet, "resnet" + str(opt.modeldepth))(
+                num_classes=opt.n_classes,
+                shortcut_type=opt.resnet_shortcut,
+                sample_size=opt.sample_size,
+                sample_duration=opt.sample_duration)
 
-        if opt.model_depth == 18:
-            model = pre_act_resnet.resnet18(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 34:
-            model = pre_act_resnet.resnet34(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 50:
-            model = pre_act_resnet.resnet50(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 101:
-            model = pre_act_resnet.resnet101(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 152:
-            model = pre_act_resnet.resnet152(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 200:
-            model = pre_act_resnet.resnet200(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-    elif opt.model == 'densenet':
-        assert opt.model_depth in [121, 169, 201, 264]
+    elif opt.modelname == 'densenet':
+        assert opt.modeldepth in [121, 169, 201, 264]
 
-        from models.densenet import get_fine_tuning_parameters
-
-        if opt.model_depth == 121:
-            model = densenet.densenet121(
-                num_classes=opt.n_classes,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 169:
-            model = densenet.densenet169(
-                num_classes=opt.n_classes,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 201:
-            model = densenet.densenet201(
-                num_classes=opt.n_classes,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        elif opt.model_depth == 264:
-            model = densenet.densenet264(
+        from imagemodels.densenet import get_fine_tuning_parameters
+        model = getattr(densenet, opt.modelname + str(opt.modeldepth))(
                 num_classes=opt.n_classes,
                 sample_size=opt.sample_size,
                 sample_duration=opt.sample_duration)
 
-    if not opt.no_cuda:
+    if opt.cuda:
         model = model.cuda()
-        model = nn.DataParallel(model, device_ids=None)
 
         if opt.pretrain_path:
-            print('loading pretrained model {}'.format(opt.pretrain_path))
-            pretrain = torch.load(opt.pretrain_path)
-            assert opt.arch == pretrain['arch']
 
-            model.load_state_dict(pretrain['state_dict'])
+            state_dict = torch.load(opt.pretrain_path)
+            # create new OrderedDict that does not contain `module.`
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for k, v in state_dict['state_dict'].items():
+                name = k[7:] # remove `module.`
+                new_state_dict[name] = v
 
-            if opt.model == 'densenet':
-                model.module.classifier = nn.Linear(
-                    model.module.classifier.in_features, opt.n_finetune_classes)
-                model.module.classifier = model.module.classifier.cuda()
+            # load params
+            assert opt.arch == state_dict['arch']
+
+            model.load_state_dict(new_state_dict)
+
+            if opt.modelname == 'densenet':
+                model.classifier = nn.Linear(
+                    model.classifier.in_features, opt.n_finetune_classes)
+                model.classifier = model.module.classifier.cuda()
             else:
-                model.module.fc = nn.Linear(model.module.fc.in_features,
+                model.fc = nn.Linear(model.fc.in_features,
                                             opt.n_finetune_classes)
-                model.module.fc = model.module.fc.cuda()
+                model.fc = model.fc.cuda()
 
-            parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
-            return model, parameters
+            #parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
+            return model
     else:
         if opt.pretrain_path:
+            state_dict = torch.load(opt.pretrain_path)
+            # create new OrderedDict that does not contain `module.`
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for k, v in state_dict['state_dict'].items():
+                name = k[7:] # remove `module.`
+                new_state_dict[name] = v
+
+            # load params
+            assert opt.arch == state_dict['arch']
+
             print('loading pretrained model {}'.format(opt.pretrain_path))
             pretrain = torch.load(opt.pretrain_path)
             assert opt.arch == pretrain['arch']
 
             model.load_state_dict(pretrain['state_dict'])
 
-            if opt.model == 'densenet':
+            if opt.modelname == 'densenet':
                 model.classifier = nn.Linear(
                     model.classifier.in_features, opt.n_finetune_classes)
             else:
                 model.fc = nn.Linear(model.fc.in_features,
                                             opt.n_finetune_classes)
 
-            parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
-            return model, parameters
+            #parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
+            return model
 
     return model, model.parameters()
