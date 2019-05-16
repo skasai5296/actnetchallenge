@@ -2,6 +2,7 @@ import sys, os
 import time
 import shutil
 import argparse
+import functools
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ sys.path.append(os.pardir)
 from utils.utils import *
 from langmodels.lstm import RNNCaptioning
 from langmodels.bert import Bert
+from langmodels.transformer import Transformer
 from langmodels.vocab import Vocabulary
 from imagemodels.resnet import resnet10, resnet18, resnet34, resnet50, resnet101, resnet152, resnet200
 from dataset.activitynet_captions import ActivityNetCaptions
@@ -23,95 +25,11 @@ import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
 from utils.makemodel import generate_model
 
+from options import parse_args
+
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--n_classes',
-        default=400,
-        type=int,
-        help=
-        'Number of classes (activitynet: 200, kinetics: 400, ucf101: 101, hmdb51: 51)'
-    )
-    parser.add_argument(
-        '--n_finetune_classes',
-        default=400,
-        type=int,
-        help=
-        'Number of classes for fine-tuning. n_classes is set to the number when pretraining.'
-    )
-    parser.add_argument(
-        '--sample_size',
-        default=112,
-        type=int,
-        help='Height and width of inputs')
-    parser.add_argument(
-        '--sample_duration',
-        default=16,
-        type=int,
-        help='Temporal duration of inputs')
-    parser.add_argument(
-        '--pretrain_path', default='', type=str, help='Pretrained model (.pth)')
-    parser.add_argument(
-        '--ft_begin_index',
-        default=0,
-        type=int,
-        help='Begin block index of fine-tuning')
-    parser.add_argument(
-        '--norm_value',
-        default=1,
-        type=int,
-        help=
-        'If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
-    parser.add_argument(
-        '--modelname',
-        default='resnet',
-        type=str,
-        help='(resnet | preresnet | wideresnet | resnext | densenet | ')
-    parser.add_argument(
-        '--modeldepth',
-        default=18,
-        type=int,
-        help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
-    parser.add_argument(
-        '--resnet_shortcut',
-        default='B',
-        type=str,
-        help='Shortcut type of resnet (A | B)')
-    parser.add_argument(
-        '--wide_resnet_k', default=2, type=int, help='Wide resnet k')
-    parser.add_argument(
-        '--resnext_cardinality',
-        default=32,
-        type=int,
-        help='ResNeXt cardinality')
-    parser.add_argument(
-        '--manual_seed', default=1, type=int, help='Manually set random seed')
-    parser.add_argument('--root_path', type=str, default='/ssd1/dsets/activitynet_captions')
-    parser.add_argument('--model_path', type=str, default='../models')
-    parser.add_argument('--meta_path', type=str, default='videometa_train.json')
-    parser.add_argument('--mode', type=str, default='train')
-    parser.add_argument('--framepath', type=str, default='frames')
-    parser.add_argument('--annpath', type=str, default='train.json')
-    parser.add_argument('--rnnmethod', type=str, default='LSTM')
-    parser.add_argument('--vocabpath', type=str, default='vocab.json')
-    parser.add_argument('--lstm_pretrain_ep', type=int, default=None)
-    parser.add_argument('--model_ep', type=int, default=500)
-    parser.add_argument('--log_every', type=int, default=10)
-    parser.add_argument('--lstm_stacks', type=int, default=1)
-    parser.add_argument('--imsize', type=int, default=224)
-    parser.add_argument('--clip_len', type=int, default=16)
-    parser.add_argument('--bs', type=int, default=64)
-    parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--n_cpu', type=int, default=8)
-    parser.add_argument('--feature_size', type=int, default=512)
-    parser.add_argument('--lstm_memory', type=int, default=512)
-    parser.add_argument('--embedding_size', type=int, default=512)
-    parser.add_argument('--max_seqlen', type=int, default=30)
-    parser.add_argument('--max_epochs', type=int, default=20)
-    parser.add_argument('--token_level', action='store_true')
-    parser.add_argument('--cuda', action='store_false')
-    args = parser.parse_args()
+    args = parse_args()
 
 
     # gpus
@@ -135,18 +53,26 @@ if __name__ == '__main__':
     tp = tpt.Compose([tpt.TemporalRandomCrop(args.clip_len), tpt.LoopPadding(args.clip_len)])
 
     # dataloading
+    collatefn = functools.partial(collater, args.max_seqlen)
     dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp)
-    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, collate_fn=collater, drop_last=True)
+    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(dset) / args.batch_size)
 
     # models
     video_encoder, params = generate_model(args)
-    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen)
+    if args.langmethod == 'LSTM':
+        caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size,
+                lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
+    elif args.langmethod == 'Transformer':
+        caption_gen = Transformer(ftsize=args.feature_size, n_src_vocab=vocab_size, n_tgt_vocab=vocab_size,
+                len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048,
+                n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, 
+                emb_src_tgt_weight_sharing=True)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
     if args.lstm_pretrain_ep is not None:
-        dec_model_dir = os.path.join(args.model_path, "{}_pre".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        dec_model_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(args.lstm_pretrain_ep)
         dec_model_path = os.path.join(dec_model_dir, dec_filename)
         try:
@@ -162,7 +88,7 @@ if __name__ == '__main__':
             enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             enc_filename = "ep{:04d}.ckpt".format(offset)
             enc_model_path = os.path.join(enc_model_dir, enc_filename)
-            dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+            dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             dec_filename = "ep{:04d}.ckpt".format(offset)
             dec_model_path = os.path.join(dec_model_dir, dec_filename)
             try:
@@ -194,16 +120,38 @@ if __name__ == '__main__':
         # move to device
         clip = clip.to(device)
         captions = captions.to(device)
-        lengths = lengths.to(device)
+        lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
 
         # flow through model
         with torch.no_grad():
             feature = video_encoder(clip)
             feature = feature.view(args.batch_size, args.feature_size)
-            caption = caption_gen.decode(feature, captions)
-            caption = vocab.return_sentence(caption)
-            for b in range(args.batch_size):
-                print(caption[b])
+
+            if args.langmethod == 'Transformer':
+                # positional encodings
+                pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
+                for b, length in enumerate(lengths):
+                    pos[b, length:] = 0
+                caption = caption_gen(feature, captions, pos, captions, pos)
+                for cap in caption:
+                    out = cap.argmax(dim=-1)
+                    out = out.unsqueeze(-1) if out.dim() == 1 else out
+                    c = vocab.return_sentence(out)
+                    c = [token for token in c if token != '<PAD>']
+                    print(" ".join(c))
+
+
+            elif args.langmethod == 'LSTM':
+                caption, length = caption_gen(feature, captions, lengths)
+                # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
+                centered = []
+                for gpu in range(n_gpu):
+                    centered.extend([ten[gpu].item() for ten in length])
+
+                caption = caption_gen.decode(feature, captions)
+                caption = vocab.return_sentence(caption)
+                for c in caption:
+                    print(c)
 
         before = time.time()
 
