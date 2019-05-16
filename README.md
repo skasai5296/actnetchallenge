@@ -6,10 +6,11 @@ TO-DO:
 - [x] complete script for converting .mp4 videos to .jpg frames
 - [x] write dataset class for ActivityNet Captions dataset
 - [x] write model for training
-- [ ] add optional training
+- [x] add optional training
 - [ ] add validation and testing code
+- [x] add Transformer training
 - [ ] add BERT training
-- [ ] add character level training
+- [x] add character level training
 - [ ] merge code
 
 ## How to download ActivityNet Captions Dataset
@@ -26,4 +27,11 @@ TO-DO:
 
 ## Training procedures
 1. run `getmeta.py` to fetch metadata (framerate, duration, video ids, ...) and obtain a json file with metadata
-1. run `train.py` with configurations
+1. run `train.py` with configurations (script is in trainscripts.sh)
+
+
+## Samples
+
+### Transformer Captions
+---
+![Transformer Captions](assets/transformer_sample.png)
