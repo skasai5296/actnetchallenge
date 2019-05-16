@@ -1,25 +1,55 @@
 import sys, os
 
+import numpy as np
+
 sys.path.append(os.pardir)
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 import torch.nn.init as init
+import torch.nn.functional as F
 
 from langmodels.vocab import tokenize
 
 
-def collater(datas, token_level=False):
+PAD = 0
+
+class LabelSmoothingLoss(nn.Module):
+    """
+    With label smoothing,
+    Calculate the cross entropy loss.
+    """
+    def __init__(self, label_smoothing, out_classes, ignore_index=PAD):
+        assert 0.0 < label_smoothing <= 1.0
+        super(LabelSmoothingLoss, self).__init__()
+        self.ignore_index = ignore_index
+        self.neg_value = label_smoothing / (out_classes - 1)
+        self.pos_value = 1.0 - label_smoothing
+        self.out_classes = out_classes
+
+    def forward(self, output, target):
+        """
+        output (FloatTensor): (bs x seqlen x C), logits of classes
+        target (LongTensor): (bs x seqlen), output class indexes
+        """
+        one_hot = torch.full_like(output, self.neg_value).scatter(-1, target.unsqueeze(-1), self.pos_value)
+        log_probs = F.log_softmax(output, dim=-1)
+        non_pad_mask = target.ne(self.ignore_index)
+        cematrix = -(one_hot * log_probs).sum(dim=-1)
+        loss = cematrix.masked_select(non_pad_mask).mean()
+
+        return loss
+
+def collater(maxlen, datas, token_level=False):
     # sort data by caption lengths for packing
     datas.sort(key=lambda x: x[1].size(0), reverse=True)
     clips, captions = zip(*datas)
-    maxlen = datas[0][1].size(0)
     batchsize = len(captions)
     ten = []
     lengths = torch.tensor([cap.size(0) for cap in captions], dtype=torch.long)
     padded_captions = torch.zeros(batchsize, maxlen, dtype=torch.long)
     for i, caption in enumerate(captions):
-        length = caption.size(0)
+        length = min(caption.size(0), maxlen)
         padded_captions[i, :length] = caption[:length]
 
     batched_clip = torch.stack(clips)
@@ -106,15 +136,12 @@ def weight_init(m):
             else:
                 init.normal_(param.data)
 
+
 # returns the mask containing 1s for not padding indexes
-# seq : (bs, seq_len), lengths
-def get_non_pad_mask(seq, lengths):
+# seq : (bs, seq_len)
+def get_non_pad_mask(seq):
     assert seq.dim() == 2
-    bs, seqlen = seq.size()
-    mask = torch.zeros(bs, seqlen)
-    for b, seqsize in enumerate(lengths):
-        mask[b, :seqsize] = seq[b, :]
-    return mask.type(torch.float).unsqueeze(-1)
+    return seq.ne(PAD).type(torch.float).unsqueeze(-1)
 
 # returns sinusoid encoding for given position and dimension.
 # torch.FloatTensor(n_position x d_hid)
@@ -144,7 +171,7 @@ def get_attn_key_pad_mask(seq_k, seq_q):
 
     # Expand to fit the shape of key query attention matrix.
     len_q = seq_q.size(1)
-    padding_mask = seq_k.eq(Constants.PAD)
+    padding_mask = seq_k.eq(PAD)
     padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
 
     return padding_mask

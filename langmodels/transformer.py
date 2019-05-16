@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 import sys, os
 sys.path.append(os.pardir)
-from utils import *
+from utils.utils import *
 
-
+PAD = 0
 
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
@@ -15,7 +15,7 @@ class ScaledDotProductAttention(nn.Module):
         super().__init__()
         self.temperature = temperature
         self.dropout = nn.Dropout(attn_dropout)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=2)
 
     # q, k : (bs x seq x d_k)
     # v : (bs x seq x d_v)
@@ -29,7 +29,7 @@ class ScaledDotProductAttention(nn.Module):
         if mask is not None:
             attn = attn.masked_fill(mask, -np.inf)
 
-        attn = self.softmax(attn, dim=2)
+        attn = self.softmax(attn)
         attn = self.dropout(attn)
         # output : (bs x seq x d_v)
         output = torch.bmm(attn, v)
@@ -129,17 +129,22 @@ class PositionwiseFeedForward(nn.Module):
 class EncoderLayer(nn.Module):
     ''' Compose with two layers '''
 
-    def __init__(self, d_model, d_inner, n_head, d_k, d_v, dropout=0.1):
+    def __init__(self, ftsize, d_model, d_inner, n_head, d_k, d_v, dropout=0.1):
         super(EncoderLayer, self).__init__()
+        self.linear = nn.Linear(ftsize, d_model)
         self.slf_attn = MultiHeadAttention(
             n_head, d_model, d_k, d_v, dropout=dropout)
         self.pos_ffn = PositionwiseFeedForward(d_model, d_inner, dropout=dropout)
 
+    # feature : (bs x ftsize)
     # enc_input : (bs x seq x d_model)
     # non_pad_mask : (bs x seq x d_model), mask the padded part of sequence
     # slf_attn_mask : (bs x seq x seq), mask the subsequent tokens in encoder
-    def forward(self, enc_input, non_pad_mask=None, slf_attn_mask=None):
+    def forward(self, feature, enc_input, non_pad_mask=None, slf_attn_mask=None):
         # enc_slf_attn : (n_head*bs x seq x seq)
+        if feature is not None:
+            ft = self.linear(feature).unsqueeze(1)
+            enc_input = torch.cat((ft, enc_input), dim=1)[:, :-1]
         enc_output, enc_slf_attn = self.slf_attn(
             enc_input, enc_input, enc_input, mask=slf_attn_mask)
         enc_output *= non_pad_mask
@@ -185,7 +190,7 @@ class Encoder(nn.Module):
 
     def __init__(
             self,
-            n_src_vocab, len_max_seq, d_word_vec,
+            ftsize, n_src_vocab, len_max_seq, d_word_vec,
             n_layers, n_head, d_k, d_v,
             d_model, d_inner, dropout=0.1):
 
@@ -194,17 +199,17 @@ class Encoder(nn.Module):
         n_position = len_max_seq + 1
 
         self.src_word_emb = nn.Embedding(
-            n_src_vocab, d_word_vec, padding_idx=Constants.PAD)
+            n_src_vocab, d_word_vec, padding_idx=PAD)
 
         self.position_enc = nn.Embedding.from_pretrained(
             get_sinusoid_encoding_table(n_position, d_word_vec, padding_idx=0),
             freeze=True)
 
         self.layer_stack = nn.ModuleList([
-            EncoderLayer(d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
+            EncoderLayer(ftsize, d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
             for _ in range(n_layers)])
 
-    def forward(self, src_seq, src_pos, return_attns=False):
+    def forward(self, feature, src_seq, src_pos, return_attns=False):
 
         enc_slf_attn_list = []
 
@@ -213,10 +218,13 @@ class Encoder(nn.Module):
         non_pad_mask = get_non_pad_mask(src_seq)
 
         # -- Forward
+        # print(src_seq.size())
         enc_output = self.src_word_emb(src_seq) + self.position_enc(src_pos)
 
-        for enc_layer in self.layer_stack:
+        for layernum, enc_layer in enumerate(self.layer_stack):
+            feature = feature if layernum == 0 else None
             enc_output, enc_slf_attn = enc_layer(
+                feature,
                 enc_output,
                 non_pad_mask=non_pad_mask,
                 slf_attn_mask=slf_attn_mask)
@@ -233,14 +241,13 @@ class Decoder(nn.Module):
     def __init__(
             self,
             n_tgt_vocab, len_max_seq, d_word_vec,
-            n_layers, n_head, d_k, d_v,
-            d_model, d_inner, dropout=0.1):
+            n_layers, n_head, d_k, d_v, d_model, d_inner, dropout=0.1):
 
         super().__init__()
         n_position = len_max_seq + 1
 
         self.tgt_word_emb = nn.Embedding(
-            n_tgt_vocab, d_word_vec, padding_idx=Constants.PAD)
+            n_tgt_vocab, d_word_vec, padding_idx=PAD)
 
         self.position_enc = nn.Embedding.from_pretrained(
             get_sinusoid_encoding_table(n_position, d_word_vec, padding_idx=0),
@@ -286,7 +293,7 @@ class Transformer(nn.Module):
 
     def __init__(
             self,
-            n_src_vocab, n_tgt_vocab, len_max_seq,
+            ftsize, n_src_vocab, n_tgt_vocab, len_max_seq,
             d_word_vec=512, d_model=512, d_inner=2048,
             n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1,
             tgt_emb_prj_weight_sharing=True,
@@ -295,7 +302,7 @@ class Transformer(nn.Module):
         super().__init__()
 
         self.encoder = Encoder(
-            n_src_vocab=n_src_vocab, len_max_seq=len_max_seq,
+            ftsize=ftsize, n_src_vocab=n_src_vocab, len_max_seq=len_max_seq,
             d_word_vec=d_word_vec, d_model=d_model, d_inner=d_inner,
             n_layers=n_layers, n_head=n_head, d_k=d_k, d_v=d_v,
             dropout=dropout)
@@ -326,15 +333,17 @@ class Transformer(nn.Module):
             "To share word embedding table, the vocabulary size of src/tgt shall be the same."
             self.encoder.src_word_emb.weight = self.decoder.tgt_word_emb.weight
 
-    def forward(self, src_seq, src_pos, tgt_seq, tgt_pos):
+    # feature : (bs x ftsize)
+    # src_seq, tgt_seq : (bs x seq_len x d_model)
+    # src_pos, tgt_seq : (bs x seq_len x d_model)
+    def forward(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
 
-        tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
-
-        enc_output, *_ = self.encoder(src_seq, src_pos)
+        enc_output, *_ = self.encoder(feature, src_seq, src_pos)
         dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
 
-        return seq_logit.view(-1, seq_logit.size(2))
+        # output should be (bs x seq_len x vocab_size)
+        return seq_logit
 
 
 

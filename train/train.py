@@ -2,6 +2,7 @@ import sys, os
 import time
 import shutil
 import argparse
+import functools
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,15 +50,18 @@ if __name__ == '__main__':
     tp = tpt.Compose([tpt.TemporalRandomCrop(args.clip_len), tpt.LoopPadding(args.clip_len)])
 
     # dataloading
+    collatefn = functools.partial(collater, args.max_seqlen)
     train_dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp)
-    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collater, drop_last=True)
+    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(train_dset) / args.bs)
 
     # models
     video_encoder = generate_model(args)
-    caption_gen = RNNCaptioning(method=args.rnnmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
-    # caption_gen = Transformer(n_src_vocab=vocab_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
-    #                           n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, emb_src_tgt_weight_sharing=True):
+    if args.langmethod == 'LSTM':
+        caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
+    elif args.langmethod == 'Transformer':
+        caption_gen = Transformer(ftsize=args.feature_size, n_src_vocab=vocab_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
+                                    n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, emb_src_tgt_weight_sharing=True)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
@@ -66,7 +70,7 @@ if __name__ == '__main__':
         enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         enc_filename = "ep{:04d}.ckpt".format(offset)
         enc_model_path = os.path.join(enc_model_dir, enc_filename)
-        dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod, args.lstm_stacks), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod, args.lstm_stacks), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(offset)
         dec_model_path = os.path.join(dec_model_dir, dec_filename)
         if os.path.exists(enc_model_path) and os.path.exists(dec_model_path):
@@ -80,7 +84,7 @@ if __name__ == '__main__':
             print("didn't find file, starting encoder, decoder from scratch")
 
     # initialize pretrained embeddings
-    if args.emb_init is not None:
+    if args.langmethod == 'LSTM' and args.emb_init is not None:
         lookup = get_pretrained_from_txt(args.emb_init)
         assert len(list(lookup.values())[0]) == args.embedding_size
         matrix = torch.randn_like(caption_gen.emb.weight)
@@ -103,7 +107,10 @@ if __name__ == '__main__':
     print("using {} gpus...".format(n_gpu))
 
     # loss function
-    criterion = nn.CrossEntropyLoss()
+    if args.langmethod == 'LSTM':
+        criterion = nn.CrossEntropyLoss()
+    elif args.langmethod == 'Transformer':
+        criterion = LabelSmoothingLoss(label_smoothing=0.1, out_classes=len(vocab))
 
     # optimizer, scheduler
     params = list(video_encoder.parameters()) + list(caption_gen.parameters())
@@ -128,12 +135,22 @@ if __name__ == '__main__':
 
             # move to device
             captions = captions.to(device)
-            lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
-            targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+            if args.langmethod == 'LSTM':
+                lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+                targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+            else:
+                targets = captions
 
             # flow through model, but if pretraining lstm, use a 0 vector for video features
             feature = torch.zeros(args.bs, args.feature_size).to(device)
-            caption, length = caption_gen(feature, captions, lengths)
+            if args.langmethod == 'Transformer':
+                pos = torch.arange(args.max_seqlen).repeat(args.batchsize, 1).to(device) + 1
+                for b, length in enumerate(lengths):
+                    pos[b, length:] = 0
+                caption = caption_gen(feature, captions, pos, targets, pos)
+            else:
+                caption, length = caption_gen(feature, captions, lengths)
+
 
             # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
             centered = []
@@ -152,11 +169,10 @@ if __name__ == '__main__':
                 print("iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
                 before = time.time()
 
-        scheduler.step(nll.cpu().item())
         print("epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
 
         # save models
-        dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(ep+1)
         dec_save_path = os.path.join(dec_save_dir, dec_filename)
         if not os.path.exists(dec_save_dir):
@@ -167,7 +183,7 @@ if __name__ == '__main__':
         else:
             torch.save(caption_gen.state_dict(), dec_save_path)
         print("saved pretrained decoder model to {}".format(dec_save_path))
-        scheduler.step(nll.cpu().item())
+        # scheduler.step(nll.cpu().item())
 
 
     # joint training loop
@@ -183,22 +199,32 @@ if __name__ == '__main__':
             # move to device
             clip = clip.to(device)
             captions = captions.to(device)
-            lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
-            targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+            if args.langmethod == 'LSTM':
+                lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+                targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+            elif args.langmethod == 'Transformer':
+                targets = captions
 
             # flow through model, but if pretraining lstm, use a 0 vector for video features
             feature = video_encoder(clip)
             feature = feature.view(args.bs, args.feature_size)
-            caption, length = caption_gen(feature, captions, lengths)
 
-            # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
-            centered = []
-            for gpu in range(n_gpu):
-                centered.extend([ten[gpu].item() for ten in length])
-            packedcaption = pack_padded_sequence(caption, centered, batch_first=True)[0]
+            if args.langmethod == 'Transformer':
+                # positional encodings
+                pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                for b, length in enumerate(lengths):
+                    pos[b, length:] = 0
+                caption = caption_gen(feature, captions, pos, captions, pos)
+            elif args.langmethod == 'LSTM':
+                caption, length = caption_gen(feature, captions, lengths)
+                # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
+                centered = []
+                for gpu in range(n_gpu):
+                    centered.extend([ten[gpu].item() for ten in length])
+                caption = pack_padded_sequence(caption, centered, batch_first=True)[0]
 
             # backpropagate loss and store negative log likelihood
-            nll = criterion(packedcaption, targets)
+            nll = criterion(caption, targets)
             nll.backward()
             optimizer.step()
 
@@ -208,14 +234,14 @@ if __name__ == '__main__':
                 print("iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
                 before = time.time()
 
-        scheduler.step(nll.cpu().item())
+        # scheduler.step(nll.cpu().item())
         print("epoch {:04d}/{:04d} done, loss: {:.06f}".format(ep+1, args.max_epochs, nll.cpu().item()), flush=True)
 
         # save models
         enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         enc_filename = "ep{:04d}.ckpt".format(ep+1)
         enc_save_path = os.path.join(enc_save_dir, enc_filename)
-        dec_save_dir = os.path.join(args.model_path, "{}_fine".format(args.rnnmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        dec_save_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(ep+1)
         dec_save_path = os.path.join(dec_save_dir, dec_filename)
         if not os.path.exists(enc_save_dir):

@@ -36,11 +36,13 @@ class Vocabulary():
     def __init__(self, token_level=False):
         self.idx2obj = []
         self.obj2idx = {}
+        self.idx2obj.append('<PAD>')
         self.idx2obj.append('<BOS>')
         self.idx2obj.append('<EOS>')
         self.idx2obj.append('<UNK>')
-        self.idx2obj.append('<NUM>')
-        self.len = 4
+        if not token_level:
+            self.idx2obj.append('<NUM>')
+        self.len = len(self.idx2obj)
         self.set_obj2idx()
         self.token_level = token_level
 
