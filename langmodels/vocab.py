@@ -108,11 +108,11 @@ class Vocabulary():
         sentences = []
         for idlist in idxlist:
             sentence = []
-            for tokenid in idlist:
+            for tokenid in idlist[1:]:
                 token = self.idx2obj[tokenid]
-                sentence.append(token)
-                if token == '<PAD>':
+                if token == '<EOS>':
                     break
+                sentence.append(token)
             if not self.token_level:
                 sentence = " ".join(sentence)
             else:

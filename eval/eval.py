@@ -135,10 +135,9 @@ if __name__ == '__main__':
                 caption = caption_gen(feature, captions, pos, captions, pos)
                 for cap in caption:
                     out = cap.argmax(dim=-1)
-                    out = out.unsqueeze(-1) if out.dim() == 1 else out
+                    out = out.unsqueeze(0) if out.dim() == 1 else out
                     c = vocab.return_sentence(out)
-                    c = [token for token in c if token != '<PAD>']
-                    print(" ".join(c))
+                    print(c)
 
 
             elif args.langmethod == 'LSTM':

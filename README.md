@@ -5,7 +5,7 @@ TO-DO:
 - [x] complete script for downloading ActivityNet videos
 - [x] complete script for converting .mp4 videos to .jpg frames
 - [x] write dataset class for ActivityNet Captions dataset
-- [x] write model for training
+- [x] write baseline model for training
 - [x] add optional training
 - [ ] add validation and testing code
 - [x] add Transformer training
