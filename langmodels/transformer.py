@@ -345,6 +345,23 @@ class Transformer(nn.Module):
         # output should be (bs x seq_len x vocab_size)
         return seq_logit
 
+    # feature : (bs x ftsize)
+    # src_seq, tgt_seq : (bs x seq_len x d_model)
+    # src_pos, tgt_seq : (bs x seq_len x d_model)
+    def sample(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
+
+        seq_len = src_seq.size(1)
+        seq = torch.zeros_like(src_seq)
+        for i in range(seq_len):
+            enc_output, *_ = self.encoder(feature, seq, src_pos)
+            dec_output, *_ = self.decoder(seq, tgt_pos, seq, enc_output)
+            seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
+            #output = (bs x seq_len)
+            output = torch.argmax(seq_logit, dim=-1)
+            seq[:, :, i] = output
+
+        # output should be (bs x seq_len x vocab_size)
+        return seq
 
 
 if __name__ == '__main__':

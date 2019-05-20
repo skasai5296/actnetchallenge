@@ -118,6 +118,42 @@ def preprocess(predata, metadata, key2idx):
         data[idx]['segments'] = regcnt
     return data
 
+"""
+preprocess object from activitynet captions dataset. (only for test)
+data attributes: list of dict. list index is the index of video, dict is info about video.
+dict : {
+    'video_id'      : str, shows the video id.
+    'framerate'     : float, shows the framerate per second
+    'num_frames'    : int, total number of frames in the video
+    'width'         : int, the width of video in pixels
+    'height'        : int, the height of video in pixels
+    'regions'       : [[int, int], [int, int], ...], list including start and end frame numbers of actions
+    'captions'      : [str, str, ...], list including captions for each action
+    'segments'      : int, number of actions
+}
+"""
+def preprocess_test(metadata, key2idx):
+    data = [None] * len(key2idx.keys())
+    for obj in metadata:
+        tmp = {}
+        idx = key2idx[obj['video_id']]
+        tmp['video_id'] = obj['video_id']
+        tmp['framerate'] = obj['framerate']
+        tmp['num_frames'] = obj['num_frames']
+        tmp['width'] = obj['width']
+        tmp['height'] = obj['height']
+        data[idx] = tmp
+    # random generation of regions
+    lengths = [16, 32, 64, 128, 256, 384, 512, 640]
+    for obj in data:
+        regs = []
+        for duration in lengths:
+            for i in range(125):
+                start = random.randrange(0, obj['num_frames'])
+                reg = [start, start+duration]
+                regs.append(reg)
+        obj['regions'] = reg
+    return data
 
 class ActivityNetCaptions(Dataset):
     """
@@ -166,7 +202,7 @@ class ActivityNetCaptions(Dataset):
         self.annfile = "{}.json".format(self.category) if mode is not 'test' else None
 
         # load annotation files
-        if self.annfile is not None:
+        if mode is not 'test':
             with open(os.path.join(root_path, self.annfile)) as f:
                 self.predata = json.load(f)
 
@@ -174,7 +210,10 @@ class ActivityNetCaptions(Dataset):
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.load(f)
 
-        self.data = preprocess(self.predata, self.meta, self.key2idx)
+        if mode is not 'test':
+            self.data = preprocess(self.predata, self.meta, self.key2idx)
+        else:
+            self.data = preprocess_test(self.meta, self.key2idx)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.target_transform = target_transform
@@ -182,6 +221,7 @@ class ActivityNetCaptions(Dataset):
         self.vidnum = len(self.data)
         self.vocab = vocab
         self.sample_duration = sample_duration
+        self.mode = mode
 
     def __getitem__(self, index):
         """
@@ -235,8 +275,11 @@ class ActivityNetCaptions(Dataset):
                 index = random.randint(0, self.vidnum-1)
                 continue
 
-            caption = self.data[index]['captions'][clipnum]
-            caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
+            if self.mode is not 'test':
+                caption = self.data[index]['captions'][clipnum]
+                caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
+            else:
+                caption = None
             break
 
         return clip, caption

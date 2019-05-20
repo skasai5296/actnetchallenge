@@ -115,12 +115,18 @@ if __name__ == '__main__':
     before = time.time()
     for it, data in enumerate(dloader):
 
-        clip, captions, lengths = data
+        if args.mode is not 'test':
+            clip, captions, lengths = data
+            lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+        else:
+            clip, _, _ = data
+            captions = torch.zeros(args.batch_size, args.max_seqlen)
+            lengths = None
 
         # move to device
         clip = clip.to(device)
-        captions = captions.to(device)
-        lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+        if args.mode is not 'test':
+            captions = captions.to(device)
 
         # flow through model
         with torch.no_grad():
@@ -130,9 +136,10 @@ if __name__ == '__main__':
             if args.langmethod == 'Transformer':
                 # positional encodings
                 pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
-                for b, length in enumerate(lengths):
-                    pos[b, length:] = 0
-                caption = caption_gen(feature, captions, pos, captions, pos)
+                if args.mode is not 'test':
+                    for b, length in enumerate(lengths):
+                        pos[b, length:] = 0
+                caption = caption_gen.sample(feature, captions, pos, captions, pos)
                 for cap in caption:
                     out = cap.argmax(dim=-1)
                     out = out.unsqueeze(0) if out.dim() == 1 else out

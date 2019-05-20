@@ -69,7 +69,6 @@ def parse_args():
     parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--framepath', type=str, default='frames')
     parser.add_argument('--annpath', type=str, default='train.json')
-    # parser.add_argument('--cnnmethod', type=str, default='resnet')
     parser.add_argument('--langmethod', type=str, default='LSTM')
     parser.add_argument('--vocabpath', type=str, default='vocab.json')
     parser.add_argument('--start_from_ep', type=int, default=0)
