@@ -334,8 +334,8 @@ class Transformer(nn.Module):
             self.encoder.src_word_emb.weight = self.decoder.tgt_word_emb.weight
 
     # feature : (bs x ftsize)
-    # src_seq, tgt_seq : (bs x seq_len x d_model)
-    # src_pos, tgt_seq : (bs x seq_len x d_model)
+    # src_seq, tgt_seq : (bs x seq_len)
+    # src_pos, tgt_seq : (bs x seq_len)
     def forward(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
 
         enc_output, *_ = self.encoder(feature, src_seq, src_pos)
@@ -346,21 +346,18 @@ class Transformer(nn.Module):
         return seq_logit
 
     # feature : (bs x ftsize)
-    # src_seq, tgt_seq : (bs x seq_len x d_model)
-    # src_pos, tgt_seq : (bs x seq_len x d_model)
-    def sample(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
+    # src_seq, tgt_seq : (bs x seq_len)
+    # src_pos, tgt_seq : (bs x seq_len)
+    def sample(self, feature, batch_size, max_seqlen, vocab):
 
-        seq_len = src_seq.size(1)
-        seq = torch.zeros_like(src_seq)
+        seq = torch.zeros(batch_size, max_seqlen, len(vocab))
         for i in range(seq_len):
             enc_output, *_ = self.encoder(feature, seq, src_pos)
             dec_output, *_ = self.decoder(seq, tgt_pos, seq, enc_output)
+            # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
-            #output = (bs x seq_len)
-            output = torch.argmax(seq_logit, dim=-1)
-            seq[:, :, i] = output
+            seq[:, i, :] = seq_logit[:, i, :]
 
-        # output should be (bs x seq_len x vocab_size)
         return seq
 
 

@@ -139,7 +139,8 @@ if __name__ == '__main__':
                 if args.mode is not 'test':
                     for b, length in enumerate(lengths):
                         pos[b, length:] = 0
-                caption = caption_gen.sample(feature, captions, pos, captions, pos)
+
+                caption = caption_gen.sample(feature, args.batch_size, args.max_seqlen, vocab)
                 for cap in caption:
                     out = cap.argmax(dim=-1)
                     out = out.unsqueeze(0) if out.dim() == 1 else out
