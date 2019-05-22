@@ -41,8 +41,12 @@ def get_default_image_loader():
         return pil_loader
 
 def pil_loader(path):
+    img = Image.open(path)
+    return img.convert('RGB')
+    """
     with Image.open(path) as img:
         return img.convert('RGB')
+    """
 
 def accimage_loader(path):
     try:
@@ -128,12 +132,12 @@ dict : {
     'width'         : int, the width of video in pixels
     'height'        : int, the height of video in pixels
     'regions'       : [[int, int], [int, int], ...], list including start and end frame numbers of actions
-    'captions'      : [str, str, ...], list including captions for each action
     'segments'      : int, number of actions
 }
 """
 def preprocess_test(metadata, key2idx):
     data = [None] * len(key2idx.keys())
+    lengths = [720, 1200]
     for obj in metadata:
         tmp = {}
         idx = key2idx[obj['video_id']]
@@ -142,18 +146,16 @@ def preprocess_test(metadata, key2idx):
         tmp['num_frames'] = obj['num_frames']
         tmp['width'] = obj['width']
         tmp['height'] = obj['height']
-        data[idx] = tmp
-    # random generation of regions
-    lengths = [16, 32, 64, 128, 256, 384, 512, 640]
-    for obj in data:
         regs = []
         for duration in lengths:
-            for i in range(125):
+            for i in range(2):
                 start = random.randrange(0, obj['num_frames'])
                 reg = [start, start+duration]
                 regs.append(reg)
-        obj['regions'] = regs
-        obj['segments'] = len(regs)
+        tmp['regions'] = regs
+        tmp['segments'] = len(regs)
+        data[idx] = tmp
+    # random generation of regions
     return data
 
 class ActivityNetCaptions(Dataset):
@@ -211,10 +213,10 @@ class ActivityNetCaptions(Dataset):
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.load(f)
 
-        if mode != 'test':
-            self.data = preprocess(self.predata, self.meta, self.key2idx)
-        else:
+        if mode == 'test':
             self.data = preprocess_test(self.meta, self.key2idx)
+        else:
+            self.data = preprocess(self.predata, self.meta, self.key2idx)
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
         self.target_transform = target_transform
@@ -282,9 +284,14 @@ class ActivityNetCaptions(Dataset):
                 caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
             else:
                 caption = None
+
+            id = self.data[index]['video_id']
+            fps = self.data[index]['framerate']
+            regs = self.data[index]['regions']
+            reg = [round(frm / fps, 2) for frm in random.choice(regs)]
             break
 
-        return clip, caption
+        return clip, caption, id, reg
 
     def __len__(self):
         return self.vidnum

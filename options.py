@@ -94,6 +94,7 @@ def parse_args():
     parser.add_argument('--token_level', action='store_true')
     parser.add_argument('--cuda', action='store_false')
     parser.add_argument('--dataparallel', action='store_false')
+    parser.add_argument('--submission_path', type=str, default='submission.json')
 
     args = parser.parse_args()
 

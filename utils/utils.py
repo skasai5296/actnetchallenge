@@ -44,7 +44,7 @@ def collater(maxlen, datas, token_level=False):
     # sort data by caption lengths for packing
     if datas[0][1] is not None:
         datas.sort(key=lambda x: x[1].size(0), reverse=True)
-    clips, captions = zip(*datas)
+    clips, captions, ids, regs = zip(*datas)
     batchsize = len(captions)
     ten = []
     if datas[0][1] is not None:
@@ -58,7 +58,7 @@ def collater(maxlen, datas, token_level=False):
         lengths = None
     clips = torch.stack(clips)
 
-    return clips, padded_captions, lengths
+    return clips, padded_captions, lengths, ids, regs
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

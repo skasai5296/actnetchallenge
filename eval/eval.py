@@ -3,6 +3,7 @@ import time
 import shutil
 import argparse
 import functools
+import json
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     # dataloading
     collatefn = functools.partial(collater, args.max_seqlen)
     dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp)
-    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
+    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=False, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(dset) / args.batch_size)
 
     # models
@@ -113,53 +114,71 @@ if __name__ == '__main__':
     # eval loop
     print("start evaluation")
     before = time.time()
-    for it, data in enumerate(dloader):
 
-        if args.mode != 'test':
-            clip, captions, lengths = data
-            lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
-        else:
-            clip, _, _ = data
-            captions = torch.ones(args.batch_size, args.max_seqlen, dtype=torch.long, device=device)
-            lengths = None
+    obj = {}
 
-        # move to device
-        clip = clip.to(device)
-        if args.mode != 'test':
-            captions = captions.to(device)
+    for loop in range(1):
+        for it, data in enumerate(dloader):
 
-        # flow through model
-        with torch.no_grad():
-            feature = video_encoder(clip)
-            feature = feature.view(args.batch_size, args.feature_size)
+            if args.mode != 'test':
+                clip, captions, lengths, ids, regs = data
+                lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+            else:
+                clip, _, _, ids, regs = data
+                captions = torch.ones(args.batch_size, args.max_seqlen, dtype=torch.long, device=device)
+                lengths = None
 
-            if args.langmethod == 'Transformer':
-                # positional encodings
-                pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
-                if args.mode != 'test':
-                    for b, length in enumerate(lengths):
-                        pos[b, length:] = 0
+            # move to device
+            clip = clip.to(device)
+            if args.mode != 'test':
+                captions = captions.to(device)
 
-                caption = caption_gen.sample(feature, captions, pos, args.max_seqlen, vocab)
-                print(vocab.return_sentence(caption))
+            # flow through model
+            with torch.no_grad():
+                feature = video_encoder(clip)
+                feature = feature.view(args.batch_size, args.feature_size)
 
+                if args.langmethod == 'Transformer':
+                    # positional encodings
+                    pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
+                    if args.mode != 'test':
+                        for b, length in enumerate(lengths):
+                            pos[b, length:] = 0
 
-            elif args.langmethod == 'LSTM':
-                caption, length = caption_gen(feature, captions, lengths)
-                # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
-                centered = []
-                for gpu in range(n_gpu):
-                    centered.extend([ten[gpu].item() for ten in length])
-
-                caption = caption_gen.decode(feature, captions)
-                caption = vocab.return_sentence(caption)
-                for c in caption:
-                    print(c)
-
-        before = time.time()
+                    caption = caption_gen.sample(feature, captions, pos, args.max_seqlen, vocab)
+                    for c, id, reg in zip(caption, ids, regs):
+                        cap = vocab.return_sentence(c.unsqueeze(0))[0]
+                        if loop == 0:
+                            obj["v_" + id] = []
+                        obj["v_" + id].append({"sentence": cap, "timestamp": reg})
+                        print("id: {} {} {}".format(id, reg, cap), flush=True)
 
 
-    print("end evaluation")
+                elif args.langmethod == 'LSTM':
+                    caption, length = caption_gen(feature, captions, lengths)
+                    # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
+                    centered = []
+                    for gpu in range(n_gpu):
+                        centered.extend([ten[gpu].item() for ten in length])
+
+                    caption = caption_gen.decode(feature, captions)
+                    for c, id, reg in zip(caption, ids, regs):
+                        cap = vocab.return_sentence(c.unsqueeze(0))[0]
+                        if loop == 0:
+                            obj["v_" + id] = []
+                        obj["v_" + id].append({"sentence": cap, "timestamp": reg})
+                        print("id:{} | {} | {}".format(id, reg, cap), flush=True)
+
+            before = time.time()
+
+
+    submission = {"version": "VERSION 1.3", "results": obj, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
+
+    with open(args.submission_path, "w") as f:
+        json.dump(submission, f)
+    print("end creation of json file, saved at {}".format(args.submission_path))
+
+    print("evaluation done")
 
 
 

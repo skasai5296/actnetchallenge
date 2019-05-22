@@ -129,7 +129,7 @@ if __name__ == '__main__':
     for ep in range(args.lstm_pretrain_ep):
         for it, data in enumerate(trainloader):
 
-            _, captions, lengths = data
+            _, captions, lengths, _, _ = data
 
             optimizer.zero_grad()
 
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     for ep in range(offset, args.max_epochs):
         for it, data in enumerate(trainloader):
 
-            clip, captions, lengths = data
+            clip, captions, lengths, _, _ = data
 
             optimizer.zero_grad()
 

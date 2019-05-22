@@ -112,6 +112,8 @@ class Vocabulary():
                 token = self.idx2obj[tokenid]
                 if token == '<EOS>':
                     break
+                elif token == '<PAD>':
+                    continue
                 sentence.append(token)
             if not self.token_level:
                 sentence = " ".join(sentence)
