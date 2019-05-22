@@ -1,6 +1,7 @@
 # files for me
 *.log
 *.ckpt
+*.out
 models/
 logs/
 wordvectors/
