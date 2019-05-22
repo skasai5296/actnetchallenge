@@ -19,7 +19,7 @@
 # nohup python train.py --max_epochs 1000 --vocabpath vocab.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 32 --feature_size 8192 --emb_init ../wordvectors/glove.840B.300d-char.txt \
 # --embedding_size 300 --modelname resnet --modeldepth 18 --resnet_shortcut A --pretrain_path ../models/resnet-18-kinetics.pth > ../logs/word_glove_langpretrain10_resnet18.out &!
 
-nohup python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 16 --feature_size 8192  \
+nohup python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 32 --feature_size 8192  \
 --langmethod Transformer --embedding_size 512 --lstm_memory 512 --modelname resnet --modeldepth 18 --resnet_shortcut A \
 --clip_len 16 --pretrain_path ../models/resnet-18-kinetics.pth > ../logs/word_transpretrain0_resnet18.out &!
 

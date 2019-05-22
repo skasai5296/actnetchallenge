@@ -337,7 +337,6 @@ class Transformer(nn.Module):
     # src_pos, tgt_seq : (bs x seq_len)
     def forward(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
 
-
         enc_output, *_ = self.encoder(feature, src_seq, src_pos)
         dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
