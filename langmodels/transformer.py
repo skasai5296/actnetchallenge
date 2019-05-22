@@ -129,22 +129,17 @@ class PositionwiseFeedForward(nn.Module):
 class EncoderLayer(nn.Module):
     ''' Compose with two layers '''
 
-    def __init__(self, ftsize, d_model, d_inner, n_head, d_k, d_v, dropout=0.1):
+    def __init__(self, d_model, d_inner, n_head, d_k, d_v, dropout=0.1):
         super(EncoderLayer, self).__init__()
-        self.linear = nn.Linear(ftsize, d_model)
         self.slf_attn = MultiHeadAttention(
             n_head, d_model, d_k, d_v, dropout=dropout)
         self.pos_ffn = PositionwiseFeedForward(d_model, d_inner, dropout=dropout)
 
-    # feature : (bs x ftsize)
     # enc_input : (bs x seq x d_model)
     # non_pad_mask : (bs x seq x d_model), mask the padded part of sequence
     # slf_attn_mask : (bs x seq x seq), mask the subsequent tokens in encoder
-    def forward(self, feature, enc_input, non_pad_mask=None, slf_attn_mask=None):
+    def forward(self, enc_input, non_pad_mask=None, slf_attn_mask=None):
         # enc_slf_attn : (n_head*bs x seq x seq)
-        if feature is not None:
-            ft = self.linear(feature).unsqueeze(1)
-            enc_input = torch.cat((ft, enc_input), dim=1)[:, :-1]
         enc_output, enc_slf_attn = self.slf_attn(
             enc_input, enc_input, enc_input, mask=slf_attn_mask)
         enc_output *= non_pad_mask
@@ -198,6 +193,8 @@ class Encoder(nn.Module):
 
         n_position = len_max_seq + 1
 
+        self.packer = nn.Linear(ftsize, d_word_vec)
+
         self.src_word_emb = nn.Embedding(
             n_src_vocab, d_word_vec, padding_idx=PAD)
 
@@ -206,7 +203,7 @@ class Encoder(nn.Module):
             freeze=True)
 
         self.layer_stack = nn.ModuleList([
-            EncoderLayer(ftsize, d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
+            EncoderLayer(d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
             for _ in range(n_layers)])
 
     def forward(self, feature, src_seq, src_pos, return_attns=False):
@@ -221,10 +218,12 @@ class Encoder(nn.Module):
         # print(src_seq.size())
         enc_output = self.src_word_emb(src_seq) + self.position_enc(src_pos)
 
+        feature = self.packer(feature).unsqueeze(1)
+        # feature : (bs x 1 x d_word_vec), enc_output : (bs x seqlen x d_word_vec)
+        enc_output = torch.cat((feature, enc_output), dim=1)[:, :-1]
+
         for layernum, enc_layer in enumerate(self.layer_stack):
-            feature = feature if layernum == 0 else None
             enc_output, enc_slf_attn = enc_layer(
-                feature,
                 enc_output,
                 non_pad_mask=non_pad_mask,
                 slf_attn_mask=slf_attn_mask)
@@ -338,6 +337,7 @@ class Transformer(nn.Module):
     # src_pos, tgt_seq : (bs x seq_len)
     def forward(self, feature, src_seq, src_pos, tgt_seq, tgt_pos):
 
+
         enc_output, *_ = self.encoder(feature, src_seq, src_pos)
         dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
@@ -348,17 +348,17 @@ class Transformer(nn.Module):
     # feature : (bs x ftsize)
     # src_seq, tgt_seq : (bs x seq_len)
     # src_pos, tgt_seq : (bs x seq_len)
-    def sample(self, feature, batch_size, max_seqlen, vocab):
+    def sample(self, feature, captions, pos, max_seqlen, vocab):
 
-        seq = torch.zeros(batch_size, max_seqlen, len(vocab))
-        for i in range(seq_len):
-            enc_output, *_ = self.encoder(feature, seq, src_pos)
-            dec_output, *_ = self.decoder(seq, tgt_pos, seq, enc_output)
+        for i in range(max_seqlen):
+            enc_output, *_ = self.encoder(feature, captions, pos)
+            dec_output, *_ = self.decoder(captions, pos, captions, enc_output)
             # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
-            seq[:, i, :] = seq_logit[:, i, :]
+            output = torch.argmax(seq_logit, dim=-1)
+            captions[:, i] = output[:, i]
 
-        return seq
+        return captions
 
 
 if __name__ == '__main__':

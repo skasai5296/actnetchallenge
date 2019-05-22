@@ -42,12 +42,12 @@ class LabelSmoothingLoss(nn.Module):
 
 def collater(maxlen, datas, token_level=False):
     # sort data by caption lengths for packing
-    if datas[1] is not None:
+    if datas[0][1] is not None:
         datas.sort(key=lambda x: x[1].size(0), reverse=True)
     clips, captions = zip(*datas)
     batchsize = len(captions)
     ten = []
-    if datas[1] is not None:
+    if datas[0][1] is not None:
         lengths = torch.tensor([cap.size(0) for cap in captions], dtype=torch.long)
         padded_captions = torch.zeros(batchsize, maxlen, dtype=torch.long)
         for i, caption in enumerate(captions):
@@ -56,9 +56,9 @@ def collater(maxlen, datas, token_level=False):
     else:
         padded_captions = None
         lengths = None
+    clips = torch.stack(clips)
 
-    batched_clip = torch.stack(clips)
-    return batched_clip, padded_captions, lengths
+    return clips, padded_captions, lengths
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

@@ -1,8 +1,0 @@
-  File "train.py", line 111
-    if char in vocab.obj2idx.keys()
-                                  ^
-SyntaxError: invalid syntax
-  File "train.py", line 111
-    if char in vocab.obj2idx.keys()
-                                  ^
-SyntaxError: invalid syntax

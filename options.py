@@ -81,7 +81,7 @@ def parse_args():
     parser.add_argument('--clip_len', type=int, default=16)
     parser.add_argument('--bs', type=int, default=128)
     parser.add_argument('--batch_size', type=int, default=1, help='only for evaluation')
-    parser.add_argument('--n_cpu', type=int, default=9)
+    parser.add_argument('--n_cpu', type=int, default=8)
     parser.add_argument('--lstm_memory', type=int, default=512)
     parser.add_argument('--embedding_size', type=int, default=512)
     parser.add_argument('--emb_init', type=str, default='../wordvectors/glove.6B.300d.txt')

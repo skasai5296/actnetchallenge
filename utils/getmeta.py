@@ -7,12 +7,11 @@ import argparse
 
 
 # returns only the ids for videos in captions dataset
-def get_actnetcaption_ids(idfiles):
+def get_actnetcaption_ids(idfile):
     paths = []
-    for file in idfiles:
-        with open(file, 'r') as f:
-            obj = json.loads(f.read())
-            paths.extend(obj)
+    with open(idfile, 'r') as f:
+        obj = json.loads(f.read())
+        paths.extend(obj)
     # take off the "v_"
     return [id[2:]for id in paths]
 
@@ -78,7 +77,7 @@ def vid2meta(video_dir, frame_dir, idsdir, save_file, shorter):
 
 
 def main(args):
-    idsdir = [os.path.join(args.rootdir, file) for file in args.idfiles]
+    idsdir = os.path.join(args.rootdir, args.idfile)
     videodir = os.path.join(args.rootdir, args.videodir)
     framedir = os.path.join(args.rootdir, args.framedir)
     logfile = os.path.join(args.rootdir, args.savefile)
@@ -97,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--rootdir', type=str, default='../../../ssd1/dsets/activitynet_captions')
     parser.add_argument('--videodir', type=str, default='videos')
     parser.add_argument('--framedir', type=str, default='frames')
-    parser.add_argument('--idfiles', type=list, default=['train_ids.json'])
+    parser.add_argument('--idfile', type=str, default='train_ids.json')
     parser.add_argument('--savefile', type=str, default='videometa_train.json')
     parser.add_argument('--shorter', type=int, default=224)
     args = parser.parse_args()

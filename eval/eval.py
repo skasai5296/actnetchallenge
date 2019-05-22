@@ -115,17 +115,17 @@ if __name__ == '__main__':
     before = time.time()
     for it, data in enumerate(dloader):
 
-        if args.mode is not 'test':
+        if args.mode != 'test':
             clip, captions, lengths = data
             lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
         else:
             clip, _, _ = data
-            captions = torch.zeros(args.batch_size, args.max_seqlen)
+            captions = torch.ones(args.batch_size, args.max_seqlen, dtype=torch.long, device=device)
             lengths = None
 
         # move to device
         clip = clip.to(device)
-        if args.mode is not 'test':
+        if args.mode != 'test':
             captions = captions.to(device)
 
         # flow through model
@@ -136,16 +136,12 @@ if __name__ == '__main__':
             if args.langmethod == 'Transformer':
                 # positional encodings
                 pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
-                if args.mode is not 'test':
+                if args.mode != 'test':
                     for b, length in enumerate(lengths):
                         pos[b, length:] = 0
 
-                caption = caption_gen.sample(feature, args.batch_size, args.max_seqlen, vocab)
-                for cap in caption:
-                    out = cap.argmax(dim=-1)
-                    out = out.unsqueeze(0) if out.dim() == 1 else out
-                    c = vocab.return_sentence(out)
-                    print(c)
+                caption = caption_gen.sample(feature, captions, pos, args.max_seqlen, vocab)
+                print(vocab.return_sentence(caption))
 
 
             elif args.langmethod == 'LSTM':

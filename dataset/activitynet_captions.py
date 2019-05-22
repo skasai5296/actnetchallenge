@@ -152,7 +152,8 @@ def preprocess_test(metadata, key2idx):
                 start = random.randrange(0, obj['num_frames'])
                 reg = [start, start+duration]
                 regs.append(reg)
-        obj['regions'] = reg
+        obj['regions'] = regs
+        obj['segments'] = len(regs)
     return data
 
 class ActivityNetCaptions(Dataset):
@@ -198,11 +199,11 @@ class ActivityNetCaptions(Dataset):
             assert mode in ['train', 'val', 'test']
         except AssertionError:
             print("mode in ActivityNetCaptions must be one of ['train', 'val', 'test']", True)
-        self.category = 'val_1' if mode is 'val' else mode
+        self.category = 'val_1' if mode == 'val' else mode
         self.annfile = "{}.json".format(self.category) if mode is not 'test' else None
 
         # load annotation files
-        if mode is not 'test':
+        if mode != 'test':
             with open(os.path.join(root_path, self.annfile)) as f:
                 self.predata = json.load(f)
 
@@ -210,7 +211,7 @@ class ActivityNetCaptions(Dataset):
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.load(f)
 
-        if mode is not 'test':
+        if mode != 'test':
             self.data = preprocess(self.predata, self.meta, self.key2idx)
         else:
             self.data = preprocess_test(self.meta, self.key2idx)
@@ -252,9 +253,10 @@ class ActivityNetCaptions(Dataset):
 
             path = os.path.join(self.framepath, id)
             # retry when frame indices returns an empty list, result in infinite loop
-            if len(frame_indices) == 0:
+            if len(frame_indices) < self.sample_duration:
                 index = random.randint(0, self.vidnum-1)
                 continue
+
             if self.temporal_transform is not None:
                 frame_indices = self.temporal_transform(frame_indices)
             clip = self.loader(path, frame_indices)
@@ -275,7 +277,7 @@ class ActivityNetCaptions(Dataset):
                 index = random.randint(0, self.vidnum-1)
                 continue
 
-            if self.mode is not 'test':
+            if self.mode != 'test':
                 caption = self.data[index]['captions'][clipnum]
                 caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
             else:
