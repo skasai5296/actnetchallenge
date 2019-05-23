@@ -10,6 +10,9 @@ __all__ = [
     'resnet152', 'resnet200'
 ]
 
+def conv1x1x1(in_planes, out_planes, stride=1):
+        return nn.Conv3d(
+                        in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 def conv3x3x3(in_planes, out_planes, stride=1):
     # 3x3x3 convolution with padding
@@ -77,8 +80,8 @@ class Bottleneck(nn.Module):
         self.conv2 = nn.Conv3d(
             planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm3d(planes)
-        self.conv3 = nn.Conv3d(planes, planes * 4, kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm3d(planes * 4)
+        self.conv3 = nn.Conv3d(planes, planes * self.expansion, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm3d(planes * self.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -113,34 +116,35 @@ class ResNet(nn.Module):
                  layers,
                  sample_size,
                  sample_duration,
+                 block_inplanes=[64, 128, 256, 512],
                  shortcut_type='B',
                  num_classes=400):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv3d(
             3,
-            64,
+            self.inplanes,
             kernel_size=7,
             stride=(1, 2, 2),
             padding=(3, 3, 3),
             bias=False)
-        self.bn1 = nn.BatchNorm3d(64)
+        self.bn1 = nn.BatchNorm3d(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0], shortcut_type)
+        self.layer1 = self._make_layer(block, block_inplanes[0], layers[0], shortcut_type)
         self.layer2 = self._make_layer(
-            block, 128, layers[1], shortcut_type, stride=2)
+            block, block_inplanes[1], layers[1], shortcut_type, stride=2)
         self.layer3 = self._make_layer(
-            block, 256, layers[2], shortcut_type, stride=2)
+            block, block_inplanes[2], layers[2], shortcut_type, stride=2)
         self.layer4 = self._make_layer(
-            block, 512, layers[3], shortcut_type, stride=2)
+            block, block_inplanes[3], layers[3], shortcut_type, stride=2)
         last_duration = int(math.ceil(sample_duration / 16))
         last_size = int(math.ceil(sample_size / 32))
 
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
 
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.fc = nn.Linear(block_inplanes[3] * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
@@ -167,7 +171,7 @@ class ResNet(nn.Module):
                         bias=False), nn.BatchNorm3d(planes * block.expansion))
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride=stride, downsample=downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes))

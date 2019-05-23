@@ -1,4 +1,5 @@
 import sys, os
+from functools import partialmethod
 
 import numpy as np
 
@@ -143,10 +144,12 @@ def weight_init(m):
 
 
 # returns the mask containing 1s for not padding indexes
-# seq : (bs, seq_len)
+# seq : (bs, seq_len) or (bs, seq_len, dim)
 def get_non_pad_mask(seq):
-    assert seq.dim() == 2
-    return seq.ne(PAD).type(torch.float).unsqueeze(-1)
+    if seq.dim() == 2:
+        return seq.ne(PAD).type(torch.float).unsqueeze(-1)
+    else:
+        return get_non_pad_mask(seq[:, :, 0])
 
 # returns sinusoid encoding for given position and dimension.
 # torch.FloatTensor(n_position x d_hid)
@@ -174,10 +177,16 @@ def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
 def get_attn_key_pad_mask(seq_k, seq_q):
     ''' For masking out the padding part of key sequence. '''
 
-    # Expand to fit the shape of key query attention matrix.
-    len_q = seq_q.size(1)
-    padding_mask = seq_k.eq(PAD)
-    padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
+    if seq_k.dim() == 2:
+        # Expand to fit the shape of key query attention matrix.
+        len_q = seq_q.size(1)
+        padding_mask = seq_k.eq(PAD)
+        padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
+    elif seq_k.dim() == 3:
+        if seq_q.dim() == 3:
+            padding_mask = get_attn_key_pad_mask(seq_k[:, :, 0], seq_q[:, :, 0])
+        else:
+            padding_mask = get_attn_key_pad_mask(seq_k[:, :, 0], seq_q)
 
     return padding_mask
 
@@ -191,5 +200,43 @@ def get_subsequent_mask(seq):
     subsequent_mask = subsequent_mask.unsqueeze(0).expand(sz_b, -1, -1)  # b x ls x ls
 
     return subsequent_mask
+
+
+def partialclass(cls, *args, **kwargs):
+
+    class PartialClass(cls):
+        __init__ = partialmethod(cls.__init__, *args, **kwargs)
+
+    return PartialClass
+
+
+def sec2str(sec):
+    if sec < 60:
+        return "elapsed: {:02d}s".format(int(sec))
+    elif sec < 3600:
+        min = int(sec / 60)
+        sec = int(sec - min * 60)
+        return "elapsed: {:02d}m{:02d}s".format(min, sec)
+    elif sec < 24 * 3600:
+        min = int(sec / 60)
+        hr = int(min / 60)
+        min = int(min - hr * 60)
+        sec = int(sec - min * 60)
+        return "elapsed: {:02d}h{:02d}m{:02d}s".format(hr, min, sec)
+    elif sec < 365 * 24 * 3600:
+        min = int(sec / 60)
+        hr = int(min / 60)
+        dy = int(hr / 24)
+        hr = int(hr - dy * 24)
+        min = int(min - hr * 60)
+        sec = int(sec - min * 60)
+        return "elapsed: {:02d} days, {:02d}h{:02d}m{:02d}s".format(dy, hr, min, sec)
+
+
+
+
+
+
+
 
 

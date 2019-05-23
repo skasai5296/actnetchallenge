@@ -116,8 +116,10 @@ if __name__ == '__main__':
     before = time.time()
 
     obj = {}
+    
+    max_loop = 1
 
-    for loop in range(1):
+    for loop in range(max_loop):
         for it, data in enumerate(dloader):
 
             if args.mode != 'test':
@@ -151,8 +153,7 @@ if __name__ == '__main__':
                         if loop == 0:
                             obj["v_" + id] = []
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
-                        print("id: {} {} {}".format(id, reg, cap), flush=True)
-
+                        #print("id: {} {} {}".format(id, reg, cap), flush=True)
 
                 elif args.langmethod == 'LSTM':
                     caption, length = caption_gen(feature, captions, lengths)
@@ -167,9 +168,13 @@ if __name__ == '__main__':
                         if loop == 0:
                             obj["v_" + id] = []
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
-                        print("id:{} | {} | {}".format(id, reg, cap), flush=True)
+                        #print("id:{} | {} | {}".format(id, reg, cap), flush=True)
+
+            if it % 10 == 9:
+                print("progress: {}/{}".format(it+1, max_it))
 
             before = time.time()
+        print("{}/{} loops done".format(loop+1, max_loop))
 
 
     submission = {"version": "VERSION 1.3", "results": obj, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}

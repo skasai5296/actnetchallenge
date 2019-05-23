@@ -35,14 +35,17 @@ def generate_model(opt):
     elif opt.modelname == 'resnext':
         assert opt.modeldepth in [50, 101, 152]
 
-        from imagemodels.resnext import get_fine_tuning_parameters
+        from imagemodels.resnext import generate_resnext
 
-        model = getattr(resnext, "resnet" + str(opt.modeldepth))(
+        model = generate_resnext(opt.modeldepth, clip_len=opt.clip_len, imsize=opt.imsize)
+        """
+        model = getattr(Res, "resnet" + str(opt.modeldepth))(
                 num_classes=opt.n_classes,
                 shortcut_type=opt.resnet_shortcut,
                 cardinality=opt.resnext_cardinality,
                 sample_size=opt.sample_size,
                 sample_duration=opt.sample_duration)
+        """
     elif opt.modelname == 'preresnet':
         assert opt.modeldepth in [18, 34, 50, 101, 152, 200]
 
@@ -72,7 +75,10 @@ def generate_model(opt):
             from collections import OrderedDict
             new_state_dict = OrderedDict()
             for k, v in state_dict['state_dict'].items():
-                name = k[7:] # remove `module.`
+                if k.startswith('module'):
+                    name = k[7:] # remove `module.`
+                else:
+                    name = k
                 new_state_dict[name] = v
 
             # load params
@@ -89,6 +95,7 @@ def generate_model(opt):
                                             opt.n_finetune_classes)
                 model.fc = model.fc.cuda()
 
+            print("loaded pretrain models from {}".format(opt.pretrain_path))
             #parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
             return model
     else:

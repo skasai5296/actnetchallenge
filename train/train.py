@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # dataloading
     collatefn = functools.partial(collater, args.max_seqlen)
-    train_dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp)
+    train_dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
     trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(train_dset) / args.bs)
 
@@ -60,8 +60,8 @@ if __name__ == '__main__':
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     elif args.langmethod == 'Transformer':
-        caption_gen = Transformer(ftsize=args.feature_size, n_src_vocab=vocab_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
-                                    n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, emb_src_tgt_weight_sharing=True)
+        caption_gen = Transformer(d_ft=args.feature_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
+                                    n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
@@ -83,6 +83,7 @@ if __name__ == '__main__':
             caption_gen.apply(weight_init)
             print("didn't find file, starting encoder, decoder from scratch")
 
+
     # initialize pretrained embeddings
     if args.langmethod == 'LSTM' and args.emb_init is not None:
         lookup = get_pretrained_from_txt(args.emb_init)
@@ -94,6 +95,12 @@ if __name__ == '__main__':
                 matrix[id, :] = torch.tensor(vec)
         caption_gen.init_embedding(matrix)
         print("succesfully initialized embeddings from {}".format(args.emb_init))
+
+    # rewrite part of average pooling
+    if args.langmethod == 'Transformer':
+        scale = 16
+        inter_time = int(args.clip_len/scale)
+        video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
 
     # move models to device
     video_encoder = video_encoder.to(device)
@@ -114,7 +121,7 @@ if __name__ == '__main__':
 
     # optimizer, scheduler
     params = list(video_encoder.parameters()) + list(caption_gen.parameters())
-    optimizer = optim.SGD(params, lr=args.lr, momentum=args.momentum)
+    optimizer = optim.SGD(params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=args.patience, verbose=True)
 
     # count parameters
@@ -125,6 +132,7 @@ if __name__ == '__main__':
 
     # decoder pretraining loop
     print("start decoder pretraining, doing for {} epochs".format(args.lstm_pretrain_ep))
+    begin = time.time()
     before = time.time()
     for ep in range(args.lstm_pretrain_ep):
         for it, data in enumerate(trainloader):
@@ -141,16 +149,16 @@ if __name__ == '__main__':
             else:
                 targets = captions
 
-            # flow through model, but if pretraining lstm, use a 0 vector for video features
-            feature = torch.zeros(args.bs, args.feature_size).to(device)
+            # flow through model, use a 0 vector for video features
             if args.langmethod == 'Transformer':
+                feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
                 pos = torch.arange(args.max_seqlen).repeat(args.batchsize, 1).to(device) + 1
                 for b, length in enumerate(lengths):
                     pos[b, length:] = 0
                 caption = caption_gen(feature, captions, pos, targets, pos)
             else:
+                feature = torch.zeros(args.bs, args.feature_size).to(device)
                 caption, length = caption_gen(feature, captions, lengths)
-
 
             # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
             centered = []
@@ -166,10 +174,10 @@ if __name__ == '__main__':
             # log losses
             if it % args.log_every == (args.log_every-1):
                 after = time.time()
-                print("iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
+                print("{}, iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
                 before = time.time()
 
-        print("epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
+        print("{}, epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
 
         # save models
         dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
@@ -206,15 +214,23 @@ if __name__ == '__main__':
                 targets = captions
 
             # flow through model, but if pretraining lstm, use a 0 vector for video features
-            feature = video_encoder(clip)
-            feature = feature.view(args.bs, args.feature_size)
-
+            with torch.no_grad():
+                feature = video_encoder(clip)
             if args.langmethod == 'Transformer':
+                # feature : (bs x C' x T/16 x 1 x 1)
+                feature = feature.permute(0, 2, 1, 3, 4).contiguous().view(args.bs, inter_time, args.feature_size)
+                # feature : (bs x T/16 x C'H'W')
+
+                if args.max_seqlen <= inter_time:
+                    pad_feature = feature[:, :args.max_seqlen, :]
+                else:
+                    pad_feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
+                    pad_feature[:, :inter_time, :] = feature
+
                 # positional encodings
-                pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
-                for b, length in enumerate(lengths):
-                    pos[b, length:] = 0
-                caption = caption_gen(feature, captions, pos, captions, pos)
+                src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
             elif args.langmethod == 'LSTM':
                 caption, length = caption_gen(feature, captions, lengths)
                 # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
@@ -231,11 +247,11 @@ if __name__ == '__main__':
             # log losses
             if it % args.log_every == (args.log_every-1):
                 after = time.time()
-                print("iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
+                print("{} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
                 before = time.time()
 
         # scheduler.step(nll.cpu().item())
-        print("epoch {:04d}/{:04d} done, loss: {:.06f}".format(ep+1, args.max_epochs, nll.cpu().item()), flush=True)
+        print("{}, epoch {:04d}/{:04d} done, loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll.cpu().item()), flush=True)
 
         # save models
         enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))

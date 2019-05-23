@@ -4,7 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--n_classes',
-        default=400,
+        default=739,
         type=int,
         help=
         'Number of classes (activitynet: 200, kinetics: 400, ucf101: 101, hmdb51: 51)'
@@ -16,16 +16,6 @@ def parse_args():
         help=
         'Number of classes for fine-tuning. n_classes is set to the number when pretraining.'
     )
-    parser.add_argument(
-        '--sample_size',
-        default=112,
-        type=int,
-        help='Height and width of inputs')
-    parser.add_argument(
-        '--sample_duration',
-        default=16,
-        type=int,
-        help='Temporal duration of inputs')
     parser.add_argument(
         '--pretrain_path', default='', type=str, help='Pretrained model (.pth)')
     parser.add_argument(
@@ -90,6 +80,7 @@ def parse_args():
     parser.add_argument('--max_epochs', type=int, default=20)
     parser.add_argument('--lr', type=float, default=1e-2)
     parser.add_argument('--momentum', type=int, default=0.9)
+    parser.add_argument('--decay', type=int, default=0.1)
     parser.add_argument('--patience', type=int, default=10)
     parser.add_argument('--token_level', action='store_true')
     parser.add_argument('--cuda', action='store_false')
