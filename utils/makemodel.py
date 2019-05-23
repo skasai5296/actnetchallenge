@@ -37,15 +37,8 @@ def generate_model(opt):
 
         from imagemodels.resnext import generate_resnext
 
-        model = generate_resnext(opt.modeldepth, clip_len=opt.clip_len, imsize=opt.imsize)
-        """
-        model = getattr(Res, "resnet" + str(opt.modeldepth))(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                cardinality=opt.resnext_cardinality,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-        """
+        model = generate_resnext(opt.modeldepth, clip_len=opt.clip_len, imsize=opt.imsize, n_classes=opt.n_classes)
+
     elif opt.modelname == 'preresnet':
         assert opt.modeldepth in [18, 34, 50, 101, 152, 200]
 

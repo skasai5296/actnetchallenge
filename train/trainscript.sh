@@ -29,7 +29,7 @@
 
 python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 16 --feature_size 2048  \
 --langmethod Transformer --embedding_size 512 --lstm_memory 512 --modelname resnext --modeldepth 101 --resnet_shortcut A \
---clip_len 64 --pretrain_path ../models/save_105.pth > ../logs/word_transpretrain0_resnext101_simple.out &!
+--clip_len 64 --pretrain_path ../models/save_105.pth > ../logs/word_transpretrain0_resnext101_simple.out
 
 # for debugging
 # python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 64 --feature_size 8192  \

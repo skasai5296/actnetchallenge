@@ -101,6 +101,7 @@ if __name__ == '__main__':
         scale = 16
         inter_time = int(args.clip_len/scale)
         video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
+        video_encoder.fc = Identity()
 
     # move models to device
     video_encoder = video_encoder.to(device)
@@ -192,7 +193,7 @@ if __name__ == '__main__':
             torch.save(caption_gen.state_dict(), dec_save_path)
         print("saved pretrained decoder model to {}".format(dec_save_path))
         # scheduler.step(nll.cpu().item())
-
+    print("done with decoder pretraining")
 
     # joint training loop
     print("start training")
@@ -218,6 +219,8 @@ if __name__ == '__main__':
                 feature = video_encoder(clip)
             if args.langmethod == 'Transformer':
                 # feature : (bs x C' x T/16 x 1 x 1)
+                # faster maybe?
+                # feature = feature.squeeze(-1).squeeze(-1).transpose(1, 2)
                 feature = feature.permute(0, 2, 1, 3, 4).contiguous().view(args.bs, inter_time, args.feature_size)
                 # feature : (bs x T/16 x C'H'W')
 

@@ -7,6 +7,7 @@ sys.path.append(os.pardir)
 from utils.utils import *
 
 PAD = 0
+BOS = 1
 
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
@@ -331,19 +332,23 @@ class Transformer(nn.Module):
         # output should be (bs x seq_len x vocab_size)
         return seq_logit
 
-    # src_seq, tgt_seq : (bs x seq_len)
-    # src_pos, tgt_seq : (bs x seq_len)
-    def sample(self, captions, pos, max_seqlen, vocab):
+    # src_seq : (bs x d_ft x inter_time)
+    # src_pos : (bs x inter_time)
+    # dec_input : (bs x seq_len)
+    # tgt_pos : (bs x seq_len)
+    def sample(self, src_seq, src_pos, tgt_pos, max_seqlen):
 
-        for i in range(max_seqlen):
-            enc_output, *_ = self.encoder(captions, pos)
-            dec_output, *_ = self.decoder(captions, pos, captions, enc_output)
+        dec_input = torch.full_like(tgt_pos, PAD)
+        dec_input[:, 0] = BOS
+        for i in range(max_seqlen-1):
+            enc_output, *_ = self.encoder(src_seq, src_pos)
+            dec_output, *_ = self.decoder(dec_input, tgt_pos, src_seq, enc_output)
             # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
             output = torch.argmax(seq_logit, dim=-1)
-            captions[:, i] = output[:, i]
+            dec_input[:, i+1] = output[:, i]
 
-        return captions
+        return dec_input
 
 
 if __name__ == '__main__':

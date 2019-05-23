@@ -61,14 +61,20 @@ if __name__ == '__main__':
 
     # models
     video_encoder, params = generate_model(args)
+
+    # rewrite part of average pooling
+    if args.langmethod == 'Transformer':
+        scale = 16
+        inter_time = int(args.clip_len/scale)
+        video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
+
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size,
                 lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     elif args.langmethod == 'Transformer':
-        caption_gen = Transformer(ftsize=args.feature_size, n_src_vocab=vocab_size, n_tgt_vocab=vocab_size,
-                len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048,
-                n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True, 
-                emb_src_tgt_weight_sharing=True)
+        caption_gen = Transformer(n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_ft=args.feature_size, 
+                d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048,
+                n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True)
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
@@ -89,6 +95,7 @@ if __name__ == '__main__':
             enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             enc_filename = "ep{:04d}.ckpt".format(offset)
             enc_model_path = os.path.join(enc_model_dir, enc_filename)
+            print(enc_model_path)
             dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             dec_filename = "ep{:04d}.ckpt".format(offset)
             dec_model_path = os.path.join(dec_model_dir, dec_filename)
@@ -102,6 +109,7 @@ if __name__ == '__main__':
             print("loaded pretrained models from epoch {}".format(offset))
         else:
             print("cannot set model_ep to number smaller than 1")
+
 
     # move models to device
     video_encoder = video_encoder.to(device)
@@ -138,22 +146,26 @@ if __name__ == '__main__':
             # flow through model
             with torch.no_grad():
                 feature = video_encoder(clip)
-                feature = feature.view(args.batch_size, args.feature_size)
 
                 if args.langmethod == 'Transformer':
-                    # positional encodings
-                    pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
-                    if args.mode != 'test':
-                        for b, length in enumerate(lengths):
-                            pos[b, length:] = 0
+                    feature = feature.squeeze(-1).squeeze(-1).transpose(1, 2)
+                    if args.max_seqlen <= inter_time:
+                        pad_feature = feature[:, :args.max_seqlen, :]
+                    else:
+                        pad_feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
+                        pad_feature[:, :inter_time, :] = feature
 
-                    caption = caption_gen.sample(feature, captions, pos, args.max_seqlen, vocab)
+                    # positional encodings
+                    src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                    tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                    caption = caption_gen.sample(pad_feature, src_pos, tgt_pos, args.max_seqlen)
+
                     for c, id, reg in zip(caption, ids, regs):
                         cap = vocab.return_sentence(c.unsqueeze(0))[0]
                         if loop == 0:
                             obj["v_" + id] = []
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
-                        #print("id: {} {} {}".format(id, reg, cap), flush=True)
+                        print("id: {} {} {}".format(id, reg, cap), flush=True)
 
                 elif args.langmethod == 'LSTM':
                     caption, length = caption_gen(feature, captions, lengths)
