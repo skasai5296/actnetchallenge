@@ -249,7 +249,7 @@ if __name__ == '__main__':
             nll = criterion(caption, targets)
             nll.backward()
             # gradient norm clipping
-            torch.nn.utils.clip_grad_norm_(caption_gen.parameters(), max_norm=1.0)
+            # torch.nn.utils.clip_grad_norm_(caption_gen.parameters(), max_norm=1.0)
             optimizer.step()
 
             # log losses
