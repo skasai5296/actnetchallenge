@@ -95,3 +95,7 @@ elapsed: 26m02s | iter 000390/001133 | nll loss: 7.5947 | 5.1750s per loop
 no key 'segments', id=JNvwkiz8Bzw
 no key 'segments', id=JkxO6IhuhOs
 elapsed: 26m54s | iter 000400/001133 | nll loss: 7.4560 | 5.1601s per loop
+elapsed: 27m46s | iter 000410/001133 | nll loss: 7.5316 | 5.2005s per loop
+duration of clip (16) does not match specified size
+duration of clip (10) does not match specified size
+elapsed: 28m37s | iter 000420/001133 | nll loss: 7.5481 | 5.0854s per loop
