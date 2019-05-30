@@ -490,3 +490,5 @@ saved decoder model to ../models/Transformer_fine/b008_s224_l064/ep0002.ckpt
 elapsed: 01h26m25s | iter 000010/001133 | nll loss: 6.6770 | 4.6158s per loop
 elapsed: 01h26m55s | iter 000020/001133 | nll loss: 6.3221 | 2.9342s per loop
 elapsed: 01h27m15s | iter 000030/001133 | nll loss: 6.6357 | 2.0675s per loop
+elapsed: 01h27m45s | iter 000040/001133 | nll loss: 6.7385 | 2.9617s per loop
+elapsed: 01h28m14s | iter 000050/001133 | nll loss: 6.8596 | 2.9347s per loop
