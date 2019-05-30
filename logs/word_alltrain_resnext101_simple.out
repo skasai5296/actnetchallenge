@@ -246,3 +246,6 @@ the <BOS> <BOS> the <BOS>
 <BOS> <BOS> the the <BOS> the <BOS> the the <BOS> the
 <BOS> the <BOS>
 <BOS> <BOS> <BOS>
+saved encoder model to ../models/resnext_101/b008_s224_l064/ep0001.ckpt
+saved decoder model to ../models/Transformer_fine/b008_s224_l064/ep0001.ckpt
+elapsed: 42m04s | iter 000010/001133 | nll loss: 7.1540 | 4.2972s per loop
