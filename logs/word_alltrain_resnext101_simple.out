@@ -7,3 +7,8 @@ using 4 gpus...
 start decoder pretraining, doing for 0 epochs
 done with decoder pretraining
 start training
+elapsed: 26s | iter 000010/001133 | nll loss: 9.5512 | 2.6126s per loop
+elapsed: 33s | iter 000020/001133 | nll loss: 9.2439 | 0.7190s per loop
+elapsed: 42s | iter 000030/001133 | nll loss: 8.6227 | 0.9329s per loop
+elapsed: 52s | iter 000040/001133 | nll loss: 8.7301 | 0.9854s per loop
+elapsed: 01m02s | iter 000050/001133 | nll loss: 8.0245 | 1.0461s per loop
