@@ -3,6 +3,10 @@ import sys, os
 sys.path.append(os.pardir)
 import json
 
+
+with open(os.path.join(".json"), "r") as f:
+    meta = json.load(f)
+
 with open(os.path.join("/ssd2/dsets/activitynet_captions", "videometa_test.json")) as f:
     meta = json.load(f)
 
