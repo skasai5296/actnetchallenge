@@ -44,3 +44,8 @@ duration of clip (37) does not match specified size
 elapsed: 07m31s | iter 000160/001133 | nll loss: 7.8194 | 3.9489s per loop
 elapsed: 08m01s | iter 000170/001133 | nll loss: 8.1973 | 3.0162s per loop
 duration of clip (62) does not match specified size
+elapsed: 08m41s | iter 000180/001133 | nll loss: 8.1014 | 4.0450s per loop
+duration of clip (37) does not match specified size
+duration of clip (16) does not match specified size
+stacking failed
+elapsed: 09m21s | iter 000190/001133 | nll loss: 7.3445 | 4.0060s per loop
