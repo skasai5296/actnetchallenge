@@ -336,7 +336,7 @@ class Transformer(nn.Module):
     # src_pos : (bs x inter_time)
     # dec_input : (bs x seq_len)
     # tgt_pos : (bs x seq_len)
-    def sample(self, src_seq, src_pos, tgt_pos, max_seqlen):
+    def sample(self, src_seq, src_pos, tgt_pos, max_seqlen, p=0.25):
 
         dec_input = torch.full_like(tgt_pos, PAD)
         dec_input[:, 0] = BOS
