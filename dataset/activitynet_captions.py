@@ -246,6 +246,7 @@ class ActivityNetCaptions(Dataset):
                 tmp = self.data[index]['segments']
             except KeyError:
                 index = random.randint(0, self.vidnum-1)
+                print("no key 'segments'")
                 continue
 
             id = self.data[index]['video_id']
@@ -265,6 +266,7 @@ class ActivityNetCaptions(Dataset):
             # retry when frame indices returns an empty list, result in infinite loop
             if len(frame_indices) < self.sample_duration:
                 index = random.randint(0, self.vidnum-1)
+                print("length of frame indices ({}) does not match specified size".format(len(frame_indices)))
                 continue
 
             clip = self.loader(path, frame_indices)
@@ -276,6 +278,7 @@ class ActivityNetCaptions(Dataset):
                 clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
             except:
                 index = random.randint(0, self.vidnum-1)
+                print("no segments")
                 continue
 
             # retry when clip is not expected size (for some reason)
@@ -283,6 +286,7 @@ class ActivityNetCaptions(Dataset):
                 assert clip.size(1) == self.sample_duration
             except AssertionError:
                 index = random.randint(0, self.vidnum-1)
+                print("no segments")
                 continue
             break
 
