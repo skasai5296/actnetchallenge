@@ -202,7 +202,6 @@ if __name__ == '__main__':
         print("{}/{} loops done".format(loop+1, max_loop))
         print("-"*100)
 
-
     submission["results"] = obj
 
     with open(args.submission_path, "w") as f:
