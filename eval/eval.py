@@ -132,9 +132,10 @@ if __name__ == '__main__':
     if args.json_path is not None:
         with open(args.json_path, "r") as f:
             submission = json.load(f)
+            obj = submission["results"]
     else:
         submission = {"version": "VERSION 1.3", "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
-    obj = {}
+        obj = {}
 
     max_loop = 20
 
@@ -202,7 +203,7 @@ if __name__ == '__main__':
         print("-"*100)
 
 
-    submission = {"version": "VERSION 1.3", "results": obj, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
+    submission["results"] = obj
 
     with open(args.submission_path, "w") as f:
         json.dump(submission, f)
