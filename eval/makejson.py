@@ -21,10 +21,13 @@ def preprocess(metadata):
     # random generation of regions
     return data
 
+def process(submission)
+
 temppath = "template.json"
 if os.path.exists(temppath):
     with open(os.path.join(temppath), "r") as f:
-        meta = json.load(f)
+        submission = json.load(f)
+    obj = process(submission["results"])
 else:
     with open(os.path.join("/ssd2/dsets/activitynet_captions", "videometa_test.json")) as f:
         meta = json.load(f)
