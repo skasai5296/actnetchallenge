@@ -353,8 +353,8 @@ class Transformer(nn.Module):
             dec_input[:, i+1] = output[:, i]
             probs[:, i] = prob[:, i]
 
-        likelihood = -probs.sum(dim=1).mean(dim=0).cpu().item()
-        print("negative log likelihood: {}".format(likelihood), flush=True)
+        likelihood = probs.sum(dim=1).mean(dim=0).cpu().item()
+        print("log likelihood: {}".format(likelihood), flush=True)
         return dec_input
 
 
