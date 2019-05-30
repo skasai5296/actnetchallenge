@@ -19,3 +19,13 @@ duration of clip (45) does not match specified size
 duration of clip (38) does not match specified size
 elapsed: 01m15s | iter 000060/001133 | nll loss: 8.1319 | 1.2619s per loop
 elapsed: 01m28s | iter 000070/001133 | nll loss: 8.0766 | 1.3508s per loop
+duration of clip (12) does not match specified size
+elapsed: 01m45s | iter 000080/001133 | nll loss: 8.0640 | 1.6527s per loop
+duration of clip (49) does not match specified size
+elapsed: 02m01s | iter 000090/001133 | nll loss: 7.7821 | 1.6296s per loop
+duration of clip (62) does not match specified size
+duration of clip (24) does not match specified size
+elapsed: 02m17s | iter 000100/001133 | nll loss: 8.0776 | 1.5970s per loop
+duration of clip (18) does not match specified size
+elapsed: 02m31s | iter 000110/001133 | nll loss: 8.0372 | 1.4184s per loop
+duration of clip (15) does not match specified size
