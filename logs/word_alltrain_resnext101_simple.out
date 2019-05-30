@@ -359,3 +359,131 @@ elapsed: 01h23m40s | iter 001080/001133 | nll loss: 6.7449 | 2.7345s per loop
 elapsed: 01h24m08s | iter 001090/001133 | nll loss: 6.8224 | 2.7272s per loop
 elapsed: 01h24m32s | iter 001100/001133 | nll loss: 6.6147 | 2.4710s per loop
 elapsed: 01h25m01s | iter 001110/001133 | nll loss: 6.6628 | 2.8549s per loop
+elapsed: 01h25m25s | iter 001120/001133 | nll loss: 6.7465 | 2.3877s per loop
+elapsed: 01h25m36s | iter 001130/001133 | nll loss: 6.5225 | 1.0942s per loop
+duration of clip (44) does not match specified size
+no key 'segments'
+duration of clip (49) does not match specified size
+duration of clip (62) does not match specified size
+duration of clip (36) does not match specified size
+duration of clip (15) does not match specified size
+duration of clip (12) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (43) does not match specified size
+no key 'segments'
+duration of clip (63) does not match specified size
+duration of clip (54) does not match specified size
+duration of clip (21) does not match specified size
+duration of clip (15) does not match specified size
+duration of clip (10) does not match specified size
+duration of clip (43) does not match specified size
+duration of clip (35) does not match specified size
+no key 'segments'
+duration of clip (57) does not match specified size
+duration of clip (23) does not match specified size
+duration of clip (40) does not match specified size
+stacking failed
+duration of clip (12) does not match specified size
+duration of clip (48) does not match specified size
+stacking failed
+duration of clip (39) does not match specified size
+no key 'segments'
+stacking failed
+duration of clip (50) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (61) does not match specified size
+stacking failed
+duration of clip (46) does not match specified size
+duration of clip (32) does not match specified size
+no key 'segments'
+duration of clip (51) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (58) does not match specified size
+duration of clip (11) does not match specified size
+duration of clip (37) does not match specified size
+no key 'segments'
+duration of clip (54) does not match specified size
+duration of clip (16) does not match specified size
+duration of clip (60) does not match specified size
+duration of clip (59) does not match specified size
+duration of clip (40) does not match specified size
+duration of clip (9) does not match specified size
+duration of clip (29) does not match specified size
+duration of clip (52) does not match specified size
+duration of clip (31) does not match specified size
+duration of clip (18) does not match specified size
+duration of clip (50) does not match specified size
+duration of clip (38) does not match specified size
+duration of clip (58) does not match specified size
+duration of clip (36) does not match specified size
+duration of clip (4) does not match specified size
+duration of clip (6) does not match specified size
+duration of clip (44) does not match specified size
+duration of clip (52) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (43) does not match specified size
+duration of clip (38) does not match specified size
+duration of clip (21) does not match specified size
+duration of clip (48) does not match specified size
+duration of clip (62) does not match specified size
+duration of clip (24) does not match specified size
+duration of clip (22) does not match specified size
+duration of clip (40) does not match specified size
+duration of clip (60) does not match specified size
+duration of clip (7) does not match specified size
+duration of clip (49) does not match specified size
+duration of clip (63) does not match specified size
+duration of clip (38) does not match specified size
+duration of clip (10) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (46) does not match specified size
+duration of clip (27) does not match specified size
+duration of clip (21) does not match specified size
+duration of clip (5) does not match specified size
+duration of clip (47) does not match specified size
+duration of clip (23) does not match specified size
+no key 'segments'
+duration of clip (7) does not match specified size
+duration of clip (13) does not match specified size
+duration of clip (46) does not match specified size
+duration of clip (51) does not match specified size
+no key 'segments'
+no key 'segments'
+duration of clip (39) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (35) does not match specified size
+duration of clip (27) does not match specified size
+no key 'segments'
+no key 'segments'
+duration of clip (3) does not match specified size
+duration of clip (49) does not match specified size
+duration of clip (49) does not match specified size
+stacking failed
+duration of clip (61) does not match specified size
+duration of clip (24) does not match specified size
+duration of clip (1) does not match specified size
+duration of clip (9) does not match specified size
+duration of clip (62) does not match specified size
+duration of clip (8) does not match specified size
+duration of clip (19) does not match specified size
+duration of clip (58) does not match specified size
+no key 'segments'
+duration of clip (33) does not match specified size
+duration of clip (11) does not match specified size
+duration of clip (63) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (11) does not match specified size
+stacking failed
+duration of clip (32) does not match specified size
+elapsed: 01h25m38s, epoch 0002/1000 done, loss: 6.602786
+sample sentences:
+<BOS> a a <BOS> the a a
+<BOS> <BOS> <BOS> the the a the
+<BOS> <BOS> <BOS> <BOS>
+<BOS> <BOS> <BOS> the <BOS> the the
+<BOS> <BOS> <BOS> a <BOS> <BOS> a a a a a a
+<BOS> <BOS> <BOS> a a a a a a the the
+<BOS> <BOS> <BOS> <BOS> the the the the the
+<BOS> <BOS> <BOS> <BOS> <BOS> a a a a
+saved encoder model to ../models/resnext_101/b008_s224_l064/ep0002.ckpt
+saved decoder model to ../models/Transformer_fine/b008_s224_l064/ep0002.ckpt
