@@ -7,35 +7,8 @@ using 4 gpus...
 start decoder pretraining, doing for 0 epochs
 done with decoder pretraining
 start training
-duration of clip (24) does not match specified size
-duration of clip (2) does not match specified size
-duration of clip (9) does not match specified size
-duration of clip (62) does not match specified size
-duration of clip (45) does not match specified size
-elapsed: 26s | iter 000010/001133 | nll loss: 9.5649 | 2.6960s per loop
-duration of clip (42) does not match specified size
-elapsed: 37s | iter 000020/001133 | nll loss: 8.9916 | 1.0856s per loop
-duration of clip (63) does not match specified size
-Traceback (most recent call last):
-  File "train.py", line 205, in <module>
-    for it, data in enumerate(trainloader):
-  File "/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 623, in __next__
-    return self._process_next_batch(batch)
-  File "/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 658, in _process_next_batch
-    raise batch.exc_type(batch.exc_msg)
-UnboundLocalError: Traceback (most recent call last):
-  File "../dataset/activitynet_captions.py", line 246, in __getitem__
-    tmp = self.data[index]['segments']
-KeyError: 'segments'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 138, in _worker_loop
-    samples = collate_fn([dataset[i] for i in batch_indices])
-  File "/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 138, in <listcomp>
-    samples = collate_fn([dataset[i] for i in batch_indices])
-  File "../dataset/activitynet_captions.py", line 249, in __getitem__
-    print("no key 'segments', id={}".format(id), flush=True)
-UnboundLocalError: local variable 'id' referenced before assignment
-
+duration of clip (20) does not match specified size
+duration of clip (40) does not match specified size
+no key 'segments', id=D7aa0iuPlKc
+elapsed: 25s | iter 000010/001133 | nll loss: 9.2200 | 2.5613s per loop
+elapsed: 31s | iter 000020/001133 | nll loss: 8.8415 | 0.5916s per loop
