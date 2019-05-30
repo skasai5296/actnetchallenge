@@ -183,7 +183,8 @@ def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
 
 # returns the mask for padding part of sequence
 def get_attn_key_pad_mask(seq_k, seq_q):
-    ''' For masking out the padding part of key sequence. '''
+    ''' For masking out the padding part of key sequence. 
+    Returns: (bs x seqlen x seqlen) '''
 
     if seq_k.dim() == 2:
         # Expand to fit the shape of key query attention matrix.

@@ -343,6 +343,7 @@ class Transformer(nn.Module):
         probs = torch.zeros_like(tgt_pos, dtype=torch.float)
         for i in range(max_seqlen-1):
             enc_output, *_ = self.encoder(src_seq, src_pos)
+            print(enc_output)
             dec_output, *_ = self.decoder(dec_input, tgt_pos, src_seq, enc_output)
             # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale

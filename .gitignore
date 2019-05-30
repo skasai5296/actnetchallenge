@@ -2,7 +2,6 @@
 *.log
 *.ckpt
 *.out
-*.json
 models/
 logs/
 wordvectors/

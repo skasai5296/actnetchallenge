@@ -234,7 +234,6 @@ if __name__ == '__main__':
                     pad_feature[:, :inter_time, :] = feature
 
                 # positional encodings
-                print(captions)
                 src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
@@ -260,7 +259,10 @@ if __name__ == '__main__':
                 before = time.time()
 
         # scheduler.step(nll.cpu().item())
-        print("{}, epoch {:04d}/{:04d} done, loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll.cpu().item()), flush=True)
+        print("{}, epoch {:04d}/{:04d} done, loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll.cpu().item()))
+        print("sample sentences:")
+        for sentence in vocab.return_sentence(caption.argmax(dim=-1)):
+            print(sentence, flush=True)
 
         # save models
         enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))

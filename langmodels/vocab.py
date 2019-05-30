@@ -102,34 +102,26 @@ class Vocabulary():
         return idxs
 
     # return sentence from given index list
-    # idxlist : torch.Tensor, (bs, *)
+    # idxlist : torch.Tensor, (bs, seqlen) or (seqlen)
     def return_sentence(self, idxlist):
-        idxlist = idxlist.cpu().tolist()
-        sentences = []
-        for idlist in idxlist:
-            sentence = []
-            for tokenid in idlist[1:]:
-                token = self.idx2obj[tokenid]
-                if token == '<EOS>':
-                    break
-                elif token == '<PAD>':
-                    continue
-                sentence.append(token)
-            if not self.token_level:
-                sentence = " ".join(sentence)
-            else:
-                sentence = "".join(sentence)
-            sentences.append(sentence)
-
-        return sentences
+        if idxlist.dim() == 1:
+            return self._return_sentence(idxlist)
+        else:
+            sentences = []
+            for idlist in idxlist:
+                sentences.append(self._return_sentence(idlist))
+            return sentences
 
     def _return_sentence(self, idxlist):
         sentence = []
+        idxlist = idxlist.cpu().tolist()
         for tokenid in idxlist:
             token = self.idx2obj[tokenid]
-            sentence.append(token)
             if token == '<EOS>':
                 break
+            elif token == '<PAD>':
+                continue
+            sentence.append(token)
         if not self.token_level:
             sentence = " ".join(sentence)
         else:
