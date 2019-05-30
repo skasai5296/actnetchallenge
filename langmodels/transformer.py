@@ -346,7 +346,7 @@ class Transformer(nn.Module):
             dec_output, *_ = self.decoder(dec_input, tgt_pos, src_seq, enc_output)
             # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
-            #seq_logit[:, :, BOS] = 0
+            seq_logit[:, :, BOS] = 0
             output = F.log_softmax(seq_logit, dim=-1)
             # prob, output : (bs x seq_len)
             prob, output = torch.max(output, dim=-1)
