@@ -106,7 +106,6 @@ if __name__ == '__main__':
     # gpus
     device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
     n_gpu = torch.cuda.device_count()
-    torch.backends.cudnn.benchmark=True
 
     # move models to device
     video_encoder = video_encoder.to(device)
