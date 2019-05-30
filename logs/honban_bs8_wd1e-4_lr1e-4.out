@@ -100,3 +100,7 @@ duration of clip (16) does not match specified size
 duration of clip (10) does not match specified size
 elapsed: 28m37s | iter 000420/001133 | nll loss: 7.5481 | 5.0854s per loop
 elapsed: 29m29s | iter 000430/001133 | nll loss: 7.7847 | 5.2274s per loop
+elapsed: 30m22s | iter 000440/001133 | nll loss: 7.5490 | 5.2911s per loop
+no key 'segments', id=dAa10hlgxCY
+duration of clip (36) does not match specified size
+duration of clip (7) does not match specified size
