@@ -80,3 +80,6 @@ elapsed: 26m34s | iter 000700/001133 | nll loss: 7.3607 | 2.2013s per loop
 elapsed: 26m57s | iter 000710/001133 | nll loss: 7.0649 | 2.3473s per loop
 elapsed: 27m19s | iter 000720/001133 | nll loss: 6.8803 | 2.2179s per loop
 elapsed: 27m47s | iter 000730/001133 | nll loss: 7.3174 | 2.7211s per loop
+elapsed: 28m08s | iter 000740/001133 | nll loss: 7.2232 | 2.1166s per loop
+elapsed: 28m31s | iter 000750/001133 | nll loss: 7.1456 | 2.3797s per loop
+elapsed: 28m52s | iter 000760/001133 | nll loss: 7.2672 | 2.0894s per loop
