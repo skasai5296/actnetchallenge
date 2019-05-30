@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # dataloading
     collatefn = functools.partial(collater, args.max_seqlen)
     dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp, sample_duration=args.clip_len)
-    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=False, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
+    dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(dset) / args.batch_size)
 
     # models
