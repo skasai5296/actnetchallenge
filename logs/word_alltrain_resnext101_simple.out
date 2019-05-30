@@ -12,3 +12,10 @@ duration of clip (40) does not match specified size
 no key 'segments', id=D7aa0iuPlKc
 elapsed: 25s | iter 000010/001133 | nll loss: 9.2200 | 2.5613s per loop
 elapsed: 31s | iter 000020/001133 | nll loss: 8.8415 | 0.5916s per loop
+elapsed: 39s | iter 000030/001133 | nll loss: 8.4359 | 0.7951s per loop
+elapsed: 50s | iter 000040/001133 | nll loss: 8.3952 | 1.1026s per loop
+elapsed: 01m02s | iter 000050/001133 | nll loss: 8.1264 | 1.2084s per loop
+duration of clip (45) does not match specified size
+duration of clip (38) does not match specified size
+elapsed: 01m15s | iter 000060/001133 | nll loss: 8.1319 | 1.2619s per loop
+elapsed: 01m28s | iter 000070/001133 | nll loss: 8.0766 | 1.3508s per loop
