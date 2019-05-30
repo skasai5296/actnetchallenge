@@ -129,8 +129,12 @@ if __name__ == '__main__':
     print("start evaluation")
     before = time.time()
 
-    obj = {}
-    
+    if args.json_path is not None:
+        with open(args.json_path, "r") as f:
+            obj = json.load(f)
+    else:
+        obj = {}
+
     max_loop = 20
 
     for loop in range(max_loop):
