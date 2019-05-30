@@ -19,3 +19,6 @@ elapsed: 03m35s | iter 000090/001133 | nll loss: 7.7308 | 1.9870s per loop
 elapsed: 03m55s | iter 000100/001133 | nll loss: 7.7428 | 2.0485s per loop
 elapsed: 04m19s | iter 000110/001133 | nll loss: 7.7866 | 2.3138s per loop
 elapsed: 04m41s | iter 000120/001133 | nll loss: 7.6235 | 2.2103s per loop
+elapsed: 05m01s | iter 000130/001133 | nll loss: 7.8850 | 2.0452s per loop
+elapsed: 05m26s | iter 000140/001133 | nll loss: 7.9483 | 2.4671s per loop
+elapsed: 05m51s | iter 000150/001133 | nll loss: 7.7619 | 2.5152s per loop
