@@ -60,3 +60,5 @@ elapsed: 12m17s | iter 000230/001133 | nll loss: 7.8500 | 4.6400s per loop
 elapsed: 13m01s | iter 000240/001133 | nll loss: 7.7441 | 4.4433s per loop
 duration of clip (23) does not match specified size
 duration of clip (15) does not match specified size
+elapsed: 13m51s | iter 000250/001133 | nll loss: 7.6390 | 4.9803s per loop
+elapsed: 14m44s | iter 000260/001133 | nll loss: 7.4590 | 5.2818s per loop
