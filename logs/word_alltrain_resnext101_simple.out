@@ -249,3 +249,6 @@ the <BOS> <BOS> the <BOS>
 saved encoder model to ../models/resnext_101/b008_s224_l064/ep0001.ckpt
 saved decoder model to ../models/Transformer_fine/b008_s224_l064/ep0001.ckpt
 elapsed: 42m04s | iter 000010/001133 | nll loss: 7.1540 | 4.2972s per loop
+elapsed: 42m29s | iter 000020/001133 | nll loss: 7.0649 | 2.5016s per loop
+elapsed: 42m52s | iter 000030/001133 | nll loss: 6.9222 | 2.2905s per loop
+elapsed: 43m14s | iter 000040/001133 | nll loss: 7.5528 | 2.2009s per loop
