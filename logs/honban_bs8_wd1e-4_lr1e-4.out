@@ -49,3 +49,5 @@ duration of clip (37) does not match specified size
 duration of clip (16) does not match specified size
 stacking failed
 elapsed: 09m21s | iter 000190/001133 | nll loss: 7.3445 | 4.0060s per loop
+elapsed: 10m01s | iter 000200/001133 | nll loss: 7.8647 | 3.9930s per loop
+duration of clip (45) does not match specified size
