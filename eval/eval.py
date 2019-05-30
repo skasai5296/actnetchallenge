@@ -179,7 +179,7 @@ if __name__ == '__main__':
                         if "v_" + id not in obj.keys():
                             obj["v_" + id] = []
                         elif len(obj["v_" + id]) == 1000:
-                            print("id: {} is full of proposals".format(id))
+                            print("id: {} is full of proposals".format(id), flush=True)
                             continue
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
                         print("id: {} {} {}".format(id, reg, cap), flush=True)
@@ -196,6 +196,9 @@ if __name__ == '__main__':
                         cap = vocab.return_sentence(c.unsqueeze(0))[0]
                         if "v_" + id not in obj.keys():
                             obj["v_" + id] = []
+                        elif len(obj["v_" + id]) == 1000:
+                            print("id: {} is full of proposals".format(id), flush=True)
+                            continue
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
                         #print("id:{} | {} | {}".format(id, reg, cap), flush=True)
 
