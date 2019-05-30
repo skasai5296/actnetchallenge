@@ -319,9 +319,9 @@ class Transformer(nn.Module):
         else:
             self.x_logit_scale = 1.
 
-    # src_seq : (bs x d_ft x inter_time)
+    # src_seq : (bs x d_ft x seq_len)
     # tgt_seq : (bs x seq_len)
-    # src_pos : (bs x inter_time)
+    # src_pos : (bs x seq_len)
     # tgt_seq : (bs x seq_len)
     def forward(self, src_seq, src_pos, tgt_seq, tgt_pos):
 
@@ -340,14 +340,21 @@ class Transformer(nn.Module):
 
         dec_input = torch.full_like(tgt_pos, PAD)
         dec_input[:, 0] = BOS
+        probs = torch.zeros_like(tgt_pos, dtype=torch.float)
         for i in range(max_seqlen-1):
             enc_output, *_ = self.encoder(src_seq, src_pos)
             dec_output, *_ = self.decoder(dec_input, tgt_pos, src_seq, enc_output)
             # seq_logit : (bs x seq_len x vocab_size)
             seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
-            output = torch.argmax(seq_logit, dim=-1)
+            #seq_logit[:, :, BOS] = 0
+            output = F.log_softmax(seq_logit, dim=-1)
+            # prob, output : (bs x seq_len)
+            prob, output = torch.max(output, dim=-1)
             dec_input[:, i+1] = output[:, i]
+            probs[:, i] = prob[:, i]
 
+        likelihood = -probs.sum(dim=1).mean(dim=0).cpu().item()
+        print("negative log likelihood: {}".format(likelihood), flush=True)
         return dec_input
 
 

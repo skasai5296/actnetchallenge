@@ -137,7 +137,7 @@ dict : {
 """
 def preprocess_test(metadata, key2idx):
     data = [None] * len(key2idx.keys())
-    lengths = [720, 1200]
+    lengths = [120, 240, 360, 480, 600, 720, 840, 1200]
     for obj in metadata:
         tmp = {}
         idx = key2idx[obj['video_id']]
@@ -148,9 +148,9 @@ def preprocess_test(metadata, key2idx):
         tmp['height'] = obj['height']
         regs = []
         for duration in lengths:
-            for i in range(2):
-                start = random.randrange(0, obj['num_frames'])
-                reg = [start, start+duration]
+            for i in range(10):
+                begin = 0 if obj['num_frames'] <= duration else random.randrange(0, obj['num_frames']-duration)
+                reg = [begin, min(obj['num_frames']-1, begin+duration)]
                 regs.append(reg)
         tmp['regions'] = regs
         tmp['segments'] = len(regs)
@@ -213,7 +213,7 @@ class ActivityNetCaptions(Dataset):
         with open(os.path.join(root_path, metadata)) as f:
             self.meta = json.load(f)
 
-        if mode == 'test':
+        if mode in ['test','val']:
             self.data = preprocess_test(self.meta, self.key2idx)
         else:
             self.data = preprocess(self.predata, self.meta, self.key2idx)
@@ -237,6 +237,10 @@ class ActivityNetCaptions(Dataset):
         """
 
         # fetch different index for incomplete data
+        if self.sample_duration == 0:
+            id = self.data[index]['video_id']
+            reg = self.data[index]['segments']
+            return None, None, id, reg
         while True:
             try:
                 tmp = self.data[index]['segments']
@@ -254,13 +258,15 @@ class ActivityNetCaptions(Dataset):
             frame_indices = list(range(startframe, endframe+1))
 
             path = os.path.join(self.framepath, id)
+
+            if self.temporal_transform is not None:
+                frame_indices = self.temporal_transform(frame_indices)
+
             # retry when frame indices returns an empty list, result in infinite loop
             if len(frame_indices) < self.sample_duration:
                 index = random.randint(0, self.vidnum-1)
                 continue
 
-            if self.temporal_transform is not None:
-                frame_indices = self.temporal_transform(frame_indices)
             clip = self.loader(path, frame_indices)
             if self.spatial_transform is not None:
                 self.spatial_transform.randomize_parameters()
@@ -278,18 +284,44 @@ class ActivityNetCaptions(Dataset):
             except AssertionError:
                 index = random.randint(0, self.vidnum-1)
                 continue
-
-            if self.mode != 'test':
-                caption = self.data[index]['captions'][clipnum]
-                caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
-            else:
-                caption = None
-
-            id = self.data[index]['video_id']
-            fps = self.data[index]['framerate']
-            regs = self.data[index]['regions']
-            reg = [round(frm / fps, 2) for frm in random.choice(regs)]
             break
+
+        """
+        tmp = self.data[index]['segments']
+
+        id = self.data[index]['video_id']
+        num_frames = self.data[index]['num_frames']
+        num_actions = self.data[index]['segments']
+
+        # get random action segment number from number of actions
+        clipnum = random.randint(0, num_actions-1)
+        startframe, endframe = self.data[index]['regions'][clipnum]
+        frame_indices = list(range(startframe, endframe+1))
+
+        path = os.path.join(self.framepath, id)
+
+        if self.temporal_transform is not None:
+            frame_indices = self.temporal_transform(frame_indices)
+        clip = self.loader(path, frame_indices)
+        if self.spatial_transform is not None:
+            self.spatial_transform.randomize_parameters()
+            clip = [self.spatial_transform(img) for img in clip]
+
+        clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+
+        # retry when clip is not expected size (for some reason)
+        assert clip.size(1) == self.sample_duration
+        """
+
+        if self.mode not in ['test', 'val']:
+            caption = self.data[index]['captions'][clipnum]
+            caption = torch.tensor(self.vocab.return_idx(caption), dtype=torch.long)
+        else:
+            caption = None
+
+        id = self.data[index]['video_id']
+        fps = self.data[index]['framerate']
+        reg = [round(startframe/fps, 2), round(endframe/fps, 2)]
 
         return clip, caption, id, reg
 

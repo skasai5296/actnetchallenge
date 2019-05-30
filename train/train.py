@@ -34,6 +34,7 @@ if __name__ == '__main__':
 
     # gpus
     device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
+    torch.backends.cudnn.benchmark=True
 
     # load vocabulary
     vocab = Vocabulary(token_level=args.token_level)
@@ -52,17 +53,24 @@ if __name__ == '__main__':
     # dataloading
     collatefn = functools.partial(collater, args.max_seqlen)
     train_dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
+    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True, pin_memory=True)
     max_it = int(len(train_dset) / args.bs)
 
     # models
     video_encoder = generate_model(args)
+    # rewrite part of average pooling
+    if args.langmethod == 'Transformer':
+        scale = 16
+        inter_time = int(args.clip_len/scale)
+        video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
+        video_encoder.fc = Identity()
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     elif args.langmethod == 'Transformer':
         caption_gen = Transformer(d_ft=args.feature_size, n_tgt_vocab=vocab_size, len_max_seq=args.max_seqlen, d_word_vec=args.embedding_size, d_model=args.lstm_memory, d_inner=2048, n_layers=6,
                                     n_head=8, d_k=64, d_v=64, dropout=0.1, tgt_emb_prj_weight_sharing=True)
     models = [video_encoder, caption_gen]
+
 
     # apply pretrained model
     offset = args.start_from_ep
@@ -79,8 +87,10 @@ if __name__ == '__main__':
             print("restarting training from epoch {}".format(offset))
         else:
             offset = 0
+            """
             video_encoder.apply(weight_init)
             caption_gen.apply(weight_init)
+            """
             print("didn't find file, starting encoder, decoder from scratch")
 
 
@@ -95,13 +105,6 @@ if __name__ == '__main__':
                 matrix[id, :] = torch.tensor(vec)
         caption_gen.init_embedding(matrix)
         print("succesfully initialized embeddings from {}".format(args.emb_init))
-
-    # rewrite part of average pooling
-    if args.langmethod == 'Transformer':
-        scale = 16
-        inter_time = int(args.clip_len/scale)
-        video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
-        video_encoder.fc = Identity()
 
     # move models to device
     video_encoder = video_encoder.to(device)
@@ -214,14 +217,14 @@ if __name__ == '__main__':
             elif args.langmethod == 'Transformer':
                 targets = captions
 
-            # flow through model, but if pretraining lstm, use a 0 vector for video features
+            # flow through model (no backprop to CNN model)
             with torch.no_grad():
                 feature = video_encoder(clip)
             if args.langmethod == 'Transformer':
-                # feature : (bs x C' x T/16 x 1 x 1)
+                # feature : (bs x C' x T/16 x 1 x 1) -> (bs x T/16 x C')
                 # faster maybe?
-                # feature = feature.squeeze(-1).squeeze(-1).transpose(1, 2)
-                feature = feature.permute(0, 2, 1, 3, 4).contiguous().view(args.bs, inter_time, args.feature_size)
+                feature = feature.squeeze(-1).squeeze(-1).transpose(1, 2)
+                # feature = feature.permute(0, 2, 1, 3, 4).contiguous().view(args.bs, inter_time, args.feature_size)
                 # feature : (bs x T/16 x C'H'W')
 
                 if args.max_seqlen <= inter_time:
@@ -231,6 +234,7 @@ if __name__ == '__main__':
                     pad_feature[:, :inter_time, :] = feature
 
                 # positional encodings
+                print(captions)
                 src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
@@ -245,6 +249,8 @@ if __name__ == '__main__':
             # backpropagate loss and store negative log likelihood
             nll = criterion(caption, targets)
             nll.backward()
+            # gradient norm clipping
+            torch.nn.utils.clip_grad_norm_(caption_gen.parameters(), max_norm=1.0)
             optimizer.step()
 
             # log losses

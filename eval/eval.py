@@ -32,12 +32,6 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-
-    # gpus
-    device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
-    n_gpu = torch.cuda.device_count()
-    print("using {} gpus...".format(n_gpu))
-
     # load vocabulary
     vocab = Vocabulary(token_level=args.token_level)
     vocpath = os.path.join(args.root_path, args.vocabpath)
@@ -55,18 +49,18 @@ if __name__ == '__main__':
 
     # dataloading
     collatefn = functools.partial(collater, args.max_seqlen)
-    dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp)
+    dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, spatial_transform=sp, temporal_transform=tp, sample_duration=args.clip_len)
     dloader = DataLoader(dset, batch_size=args.batch_size, shuffle=False, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True)
     max_it = int(len(dset) / args.batch_size)
 
     # models
     video_encoder, params = generate_model(args)
-
     # rewrite part of average pooling
     if args.langmethod == 'Transformer':
         scale = 16
         inter_time = int(args.clip_len/scale)
         video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
+        video_encoder.fc = Identity()
 
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size,
@@ -95,7 +89,6 @@ if __name__ == '__main__':
             enc_model_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             enc_filename = "ep{:04d}.ckpt".format(offset)
             enc_model_path = os.path.join(enc_model_dir, enc_filename)
-            print(enc_model_path)
             dec_model_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             dec_filename = "ep{:04d}.ckpt".format(offset)
             dec_model_path = os.path.join(dec_model_dir, dec_filename)
@@ -106,14 +99,27 @@ if __name__ == '__main__':
                 sys.exit(0)
             video_encoder.load_state_dict(torch.load(enc_model_path, map_location='cuda' if args.cuda and torch.cuda.is_available() else 'cpu'))
             caption_gen.load_state_dict(torch.load(dec_model_path, map_location='cuda' if args.cuda and torch.cuda.is_available() else 'cpu'))
-            print("loaded pretrained models from epoch {}".format(offset))
+            print("loaded trained models from epoch {}".format(offset))
         else:
             print("cannot set model_ep to number smaller than 1")
 
+    # gpus
+    device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
+    n_gpu = torch.cuda.device_count()
+    torch.backends.cudnn.benchmark=True
 
     # move models to device
     video_encoder = video_encoder.to(device)
     caption_gen = caption_gen.to(device)
+
+    """
+    if n_gpu > 1 and args.dataparallel:
+        video_encoder = nn.DataParallel(video_encoder)
+        caption_gen = nn.DataParallel(caption_gen)
+    else:
+        n_gpu = 1
+    print("using {} gpus...".format(n_gpu))
+    """
 
     # count parameters
     num_params = sum(count_parameters(model) for model in models)
@@ -130,7 +136,7 @@ if __name__ == '__main__':
     for loop in range(max_loop):
         for it, data in enumerate(dloader):
 
-            if args.mode != 'test':
+            if args.mode not in ['test', 'val']:
                 clip, captions, lengths, ids, regs = data
                 lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
             else:
@@ -140,7 +146,7 @@ if __name__ == '__main__':
 
             # move to device
             clip = clip.to(device)
-            if args.mode != 'test':
+            if args.mode not in ['test', 'val']:
                 captions = captions.to(device)
 
             # flow through model
@@ -152,12 +158,12 @@ if __name__ == '__main__':
                     if args.max_seqlen <= inter_time:
                         pad_feature = feature[:, :args.max_seqlen, :]
                     else:
-                        pad_feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
+                        pad_feature = torch.zeros(args.batch_size, args.max_seqlen, args.feature_size).to(device)
                         pad_feature[:, :inter_time, :] = feature
 
                     # positional encodings
-                    src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
-                    tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
+                    src_pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
+                    tgt_pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
                     caption = caption_gen.sample(pad_feature, src_pos, tgt_pos, args.max_seqlen)
 
                     for c, id, reg in zip(caption, ids, regs):
