@@ -278,7 +278,7 @@ class ActivityNetCaptions(Dataset):
                 clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
             except:
                 index = random.randint(0, self.vidnum-1)
-                print("no segments")
+                print("stacking failed")
                 continue
 
             # retry when clip is not expected size (for some reason)
@@ -286,7 +286,7 @@ class ActivityNetCaptions(Dataset):
                 assert clip.size(1) == self.sample_duration
             except AssertionError:
                 index = random.randint(0, self.vidnum-1)
-                print("no segments")
+                print("duration of clip ({}) does not match specified size".format(clip.size(1)))
                 continue
             break
 
