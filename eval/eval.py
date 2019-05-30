@@ -201,12 +201,10 @@ if __name__ == '__main__':
 
             before = time.time()
 
-            break
         print("-"*100)
         print("{}/{} loops done".format(loop+1, max_loop))
         print("-"*100)
 
-        break
     submission["results"] = obj
 
     with open(args.submission_path, "w") as f:
