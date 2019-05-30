@@ -1,0 +1,12 @@
+Namespace(annpath='train.json', batch_size=1, bs=8, clip_len=64, cuda=True, dataparallel=True, emb_init='../wordvectors/glove.6B.300d.txt', embedding_size=512, feature_size=2048, framepath='frames', ft_begin_index=0, imsize=224, json_path=None, langmethod='Transformer', log_every=10, lr=0.0001, lstm_memory=512, lstm_pretrain_ep=0, lstm_stacks=1, manual_seed=1, max_epochs=1000, max_seqlen=30, meta_path='videometa_train.json', mode='train', model_ep=100, model_path='../models', modeldepth=101, modelname='resnext', momentum=0.9, n_classes=739, n_cpu=8, n_finetune_classes=739, norm_value=1, num_layers=18, patience=10, pretrain_path='../models/save_105.pth', resnet_shortcut='A', resnext_cardinality=32, root_path='/ssd1/dsets/activitynet_captions', start_from_ep=0, submission_path='submission.json', token_level=False, vocabpath='vocab_pad.json', weight_decay=0.0001, wide_resnet_k=2)
+loaded dictionary from /ssd1/dsets/activitynet_captions/vocab_pad.json
+dictionary length: 11182 words
+loaded pretrain models from ../models/save_105.pth
+using 4 gpus...
+# of params in model : 98433984
+start decoder pretraining, doing for 0 epochs
+done with decoder pretraining
+start training
+duration of clip (39) does not match specified size
+stacking failed
+elapsed: 26s | iter 000010/001133 | nll loss: 9.5999 | 2.6949s per loop
