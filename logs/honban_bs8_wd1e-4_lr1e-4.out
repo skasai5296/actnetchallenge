@@ -20,3 +20,4 @@ elapsed: 02m44s | iter 000030/001133 | nll loss: 8.6593 | 4.6004s per loop
 duration of clip (44) does not match specified size
 elapsed: 03m30s | iter 000040/001133 | nll loss: 8.5040 | 4.6032s per loop
 no key 'segments', id=D_XMD02v690
+duration of clip (6) does not match specified size
