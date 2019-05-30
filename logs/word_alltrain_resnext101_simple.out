@@ -61,3 +61,10 @@ elapsed: 07m34s | iter 000280/001133 | nll loss: 7.3993 | 2.0885s per loop
 duration of clip (53) does not match specified size
 elapsed: 07m58s | iter 000290/001133 | nll loss: 7.6662 | 2.3519s per loop
 duration of clip (6) does not match specified size
+no key 'segments', id=dAa10hlgxCY
+duration of clip (5) does not match specified size
+elapsed: 08m21s | iter 000300/001133 | nll loss: 7.5307 | 2.2836s per loop
+duration of clip (45) does not match specified size
+duration of clip (51) does not match specified size
+elapsed: 08m49s | iter 000310/001133 | nll loss: 7.7020 | 2.8420s per loop
+stacking failed
