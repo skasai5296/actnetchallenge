@@ -183,7 +183,7 @@ if __name__ == '__main__':
                     caption = caption_gen.decode(feature, captions)
                     for c, id, reg in zip(caption, ids, regs):
                         cap = vocab.return_sentence(c.unsqueeze(0))[0]
-                        if loop == 0:
+                        if "v_" + id not in obj.keys():
                             obj["v_" + id] = []
                         obj["v_" + id].append({"sentence": cap, "timestamp": reg})
                         #print("id:{} | {} | {}".format(id, reg, cap), flush=True)
@@ -192,7 +192,9 @@ if __name__ == '__main__':
                 print("progress: {}/{}".format(it+1, max_it))
 
             before = time.time()
+        print("-"*100)
         print("{}/{} loops done".format(loop+1, max_loop))
+        print("-"*100)
 
 
     submission = {"version": "VERSION 1.3", "results": obj, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
