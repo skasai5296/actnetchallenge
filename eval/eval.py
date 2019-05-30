@@ -97,6 +97,7 @@ if __name__ == '__main__':
             except AssertionError:
                 print("didn't find files in directories {} or {}! aborting".format(enc_model_path, dec_model_path))
                 sys.exit(0)
+            print(enc_model_path)
             video_encoder.load_state_dict(torch.load(enc_model_path, map_location='cuda' if args.cuda and torch.cuda.is_available() else 'cpu'))
             caption_gen.load_state_dict(torch.load(dec_model_path, map_location='cuda' if args.cuda and torch.cuda.is_available() else 'cpu'))
             print("loaded trained models from epoch {}".format(offset))
