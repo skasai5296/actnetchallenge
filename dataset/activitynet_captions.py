@@ -236,20 +236,21 @@ class ActivityNetCaptions(Dataset):
             caption : torch.LongTensor of size (*,)
         """
 
-        # fetch different index for incomplete data
         if self.sample_duration == 0:
             id = self.data[index]['video_id']
             reg = self.data[index]['segments']
             return None, None, id, reg
+
+        # fetch different index for incomplete data
         while True:
+            id = self.data[index]['video_id']
             try:
-                tmp = self.data[index]['segments']
+                num_actions = self.data[index]['segments']
             except KeyError:
                 index = random.randint(0, self.vidnum-1)
                 print("no key 'segments', id={}".format(id), flush=True)
                 continue
 
-            id = self.data[index]['video_id']
             num_frames = self.data[index]['num_frames']
             num_actions = self.data[index]['segments']
 
