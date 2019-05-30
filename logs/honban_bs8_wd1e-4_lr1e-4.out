@@ -9,3 +9,7 @@ done with decoder pretraining
 start training
 duration of clip (53) does not match specified size
 duration of clip (5) does not match specified size
+duration of clip (60) does not match specified size
+elapsed: 01m23s | iter 000010/001133 | nll loss: 9.7404 | 8.3126s per loop
+duration of clip (60) does not match specified size
+stacking failed
