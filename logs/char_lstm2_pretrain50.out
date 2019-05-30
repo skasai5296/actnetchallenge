@@ -1,0 +1,863 @@
+Namespace(annpath='train.json', bs=64, clip_len=16, cnnmethod='resnet', cuda=True, dataparallel=True, embedding_size=512, feature_size=512, framepath='frames', imsize=224, log_every=10, lr=0.0001, lstm_memory=512, lstm_pretrain_ep=50, lstm_stacks=2, max_epochs=500, max_seqlen=150, meta_path='videometa_train.json', mode='train', model_path='../models', momentum=0.9, n_cpu=8, num_layers=10, patience=10, rnnmethod='LSTM', root_path='/ssd1/dsets/activitynet_captions', start_from_ep=0, token_level=True, vocabpath='vocab_char.json')
+loaded dictionary from /ssd1/dsets/activitynet_captions/vocab_char.json
+dictionary length: 91 words
+using 4 gpus...
+# of params in model : 16856603
+start training
+iter 000010/000141 | nll loss: 4.5339 | 1.3959s per loop
+iter 000020/000141 | nll loss: 4.5321 | 0.4277s per loop
+iter 000030/000141 | nll loss: 4.5279 | 0.4329s per loop
+iter 000040/000141 | nll loss: 4.5254 | 0.4223s per loop
+iter 000050/000141 | nll loss: 4.5222 | 0.4338s per loop
+iter 000060/000141 | nll loss: 4.5149 | 0.4333s per loop
+iter 000070/000141 | nll loss: 4.5160 | 0.4167s per loop
+iter 000080/000141 | nll loss: 4.5082 | 0.4505s per loop
+iter 000090/000141 | nll loss: 4.5076 | 0.4947s per loop
+iter 000100/000141 | nll loss: 4.4998 | 0.4763s per loop
+iter 000110/000141 | nll loss: 4.4977 | 0.5021s per loop
+iter 000120/000141 | nll loss: 4.4921 | 0.4587s per loop
+iter 000130/000141 | nll loss: 4.4857 | 0.4862s per loop
+iter 000140/000141 | nll loss: 4.4827 | 0.4500s per loop
+epoch 0001/0500 done, loss: 4.484019
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0001.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0001.ckpt
+/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/nn/parallel/_functions.py:61: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+iter 000010/000141 | nll loss: 4.4801 | 0.8968s per loop
+iter 000020/000141 | nll loss: 4.4762 | 0.4751s per loop
+iter 000030/000141 | nll loss: 4.4730 | 0.4726s per loop
+iter 000040/000141 | nll loss: 4.4677 | 0.4875s per loop
+iter 000050/000141 | nll loss: 4.4658 | 0.5320s per loop
+iter 000060/000141 | nll loss: 4.4602 | 0.4633s per loop
+iter 000070/000141 | nll loss: 4.4562 | 0.4719s per loop
+iter 000080/000141 | nll loss: 4.4531 | 0.4538s per loop
+iter 000090/000141 | nll loss: 4.4502 | 0.5263s per loop
+iter 000100/000141 | nll loss: 4.4398 | 0.4585s per loop
+iter 000110/000141 | nll loss: 4.4442 | 0.4727s per loop
+iter 000120/000141 | nll loss: 4.4366 | 0.4408s per loop
+iter 000130/000141 | nll loss: 4.4340 | 0.5255s per loop
+iter 000140/000141 | nll loss: 4.4261 | 0.4025s per loop
+epoch 0002/0500 done, loss: 4.428516
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0002.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0002.ckpt
+iter 000010/000141 | nll loss: 4.4270 | 0.9080s per loop
+iter 000020/000141 | nll loss: 4.4208 | 0.4677s per loop
+iter 000030/000141 | nll loss: 4.4154 | 0.4598s per loop
+iter 000040/000141 | nll loss: 4.4054 | 0.4572s per loop
+iter 000050/000141 | nll loss: 4.4139 | 0.5387s per loop
+iter 000060/000141 | nll loss: 4.4019 | 0.4839s per loop
+iter 000070/000141 | nll loss: 4.3924 | 0.4685s per loop
+iter 000080/000141 | nll loss: 4.3928 | 0.4889s per loop
+iter 000090/000141 | nll loss: 4.3949 | 0.5099s per loop
+iter 000100/000141 | nll loss: 4.3864 | 0.4782s per loop
+iter 000110/000141 | nll loss: 4.3856 | 0.4687s per loop
+iter 000120/000141 | nll loss: 4.3775 | 0.4754s per loop
+iter 000130/000141 | nll loss: 4.3760 | 0.5177s per loop
+iter 000140/000141 | nll loss: 4.3736 | 0.4159s per loop
+epoch 0003/0500 done, loss: 4.370077
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0003.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0003.ckpt
+iter 000010/000141 | nll loss: 4.3704 | 0.8894s per loop
+iter 000020/000141 | nll loss: 4.3709 | 0.4575s per loop
+iter 000030/000141 | nll loss: 4.3578 | 0.4670s per loop
+iter 000040/000141 | nll loss: 4.3520 | 0.4709s per loop
+iter 000050/000141 | nll loss: 4.3576 | 0.5154s per loop
+iter 000060/000141 | nll loss: 4.3478 | 0.4576s per loop
+iter 000070/000141 | nll loss: 4.3468 | 0.4650s per loop
+iter 000080/000141 | nll loss: 4.3403 | 0.4586s per loop
+iter 000090/000141 | nll loss: 4.3364 | 0.5181s per loop
+iter 000100/000141 | nll loss: 4.3419 | 0.4633s per loop
+iter 000110/000141 | nll loss: 4.3250 | 0.4855s per loop
+iter 000120/000141 | nll loss: 4.3219 | 0.4499s per loop
+iter 000130/000141 | nll loss: 4.3217 | 0.5205s per loop
+iter 000140/000141 | nll loss: 4.3092 | 0.4146s per loop
+epoch 0004/0500 done, loss: 4.314426
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0004.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0004.ckpt
+iter 000010/000141 | nll loss: 4.3053 | 0.9030s per loop
+iter 000020/000141 | nll loss: 4.3110 | 0.4829s per loop
+iter 000030/000141 | nll loss: 4.3075 | 0.4789s per loop
+iter 000040/000141 | nll loss: 4.2938 | 0.4657s per loop
+iter 000050/000141 | nll loss: 4.2921 | 0.5106s per loop
+iter 000060/000141 | nll loss: 4.2806 | 0.4699s per loop
+iter 000070/000141 | nll loss: 4.2757 | 0.4770s per loop
+iter 000080/000141 | nll loss: 4.2744 | 0.4386s per loop
+iter 000090/000141 | nll loss: 4.2828 | 0.5383s per loop
+iter 000100/000141 | nll loss: 4.2797 | 0.4686s per loop
+iter 000110/000141 | nll loss: 4.2585 | 0.4685s per loop
+iter 000120/000141 | nll loss: 4.2638 | 0.4624s per loop
+iter 000130/000141 | nll loss: 4.2646 | 0.5042s per loop
+iter 000140/000141 | nll loss: 4.2695 | 0.4280s per loop
+epoch 0005/0500 done, loss: 4.255177
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0005.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0005.ckpt
+iter 000010/000141 | nll loss: 4.2389 | 1.0292s per loop
+iter 000020/000141 | nll loss: 4.2558 | 0.5447s per loop
+iter 000030/000141 | nll loss: 4.2426 | 0.4645s per loop
+iter 000040/000141 | nll loss: 4.2513 | 0.4945s per loop
+iter 000050/000141 | nll loss: 4.2394 | 0.4988s per loop
+iter 000060/000141 | nll loss: 4.2381 | 0.4846s per loop
+iter 000070/000141 | nll loss: 4.2209 | 0.4868s per loop
+iter 000080/000141 | nll loss: 4.2253 | 0.4860s per loop
+iter 000090/000141 | nll loss: 4.2279 | 0.4928s per loop
+iter 000100/000141 | nll loss: 4.2158 | 0.4857s per loop
+iter 000110/000141 | nll loss: 4.2060 | 0.5181s per loop
+iter 000120/000141 | nll loss: 4.2145 | 0.4899s per loop
+iter 000130/000141 | nll loss: 4.2028 | 0.4960s per loop
+iter 000140/000141 | nll loss: 4.1983 | 0.4390s per loop
+epoch 0006/0500 done, loss: 4.194631
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0006.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0006.ckpt
+iter 000010/000141 | nll loss: 4.2019 | 0.9069s per loop
+iter 000020/000141 | nll loss: 4.1818 | 0.4676s per loop
+iter 000030/000141 | nll loss: 4.1878 | 0.4851s per loop
+iter 000040/000141 | nll loss: 4.1901 | 0.4642s per loop
+iter 000050/000141 | nll loss: 4.1888 | 0.5240s per loop
+iter 000060/000141 | nll loss: 4.1825 | 0.4851s per loop
+iter 000070/000141 | nll loss: 4.1718 | 0.4661s per loop
+iter 000080/000141 | nll loss: 4.1664 | 0.4674s per loop
+iter 000090/000141 | nll loss: 4.1699 | 0.4871s per loop
+iter 000100/000141 | nll loss: 4.1521 | 0.4587s per loop
+iter 000110/000141 | nll loss: 4.1574 | 0.4636s per loop
+iter 000120/000141 | nll loss: 4.1616 | 0.4603s per loop
+iter 000130/000141 | nll loss: 4.1354 | 0.5478s per loop
+iter 000140/000141 | nll loss: 4.1487 | 0.4394s per loop
+epoch 0007/0500 done, loss: 4.145388
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0007.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0007.ckpt
+iter 000010/000141 | nll loss: 4.1416 | 0.9407s per loop
+iter 000020/000141 | nll loss: 4.1183 | 0.4559s per loop
+iter 000030/000141 | nll loss: 4.1413 | 0.4693s per loop
+iter 000040/000141 | nll loss: 4.1402 | 0.5007s per loop
+iter 000050/000141 | nll loss: 4.1299 | 0.5305s per loop
+iter 000060/000141 | nll loss: 4.1084 | 0.4632s per loop
+iter 000070/000141 | nll loss: 4.1262 | 0.4623s per loop
+iter 000080/000141 | nll loss: 4.1214 | 0.4889s per loop
+iter 000090/000141 | nll loss: 4.0987 | 0.5056s per loop
+iter 000100/000141 | nll loss: 4.1043 | 0.4572s per loop
+iter 000110/000141 | nll loss: 4.1201 | 0.4593s per loop
+iter 000120/000141 | nll loss: 4.1117 | 0.4759s per loop
+iter 000130/000141 | nll loss: 4.1056 | 0.5347s per loop
+iter 000140/000141 | nll loss: 4.0985 | 0.4170s per loop
+epoch 0008/0500 done, loss: 4.083132
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0008.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0008.ckpt
+iter 000010/000141 | nll loss: 4.0873 | 0.9214s per loop
+iter 000020/000141 | nll loss: 4.1038 | 0.4576s per loop
+iter 000030/000141 | nll loss: 4.0801 | 0.4539s per loop
+iter 000040/000141 | nll loss: 4.0924 | 0.4800s per loop
+iter 000050/000141 | nll loss: 4.0703 | 0.5340s per loop
+iter 000060/000141 | nll loss: 4.0554 | 0.4613s per loop
+iter 000070/000141 | nll loss: 4.0741 | 0.4613s per loop
+iter 000080/000141 | nll loss: 4.0847 | 0.4709s per loop
+iter 000090/000141 | nll loss: 4.0659 | 0.5284s per loop
+iter 000100/000141 | nll loss: 4.0477 | 0.4774s per loop
+iter 000110/000141 | nll loss: 4.0425 | 0.4732s per loop
+iter 000120/000141 | nll loss: 4.0710 | 0.4753s per loop
+iter 000130/000141 | nll loss: 4.0625 | 0.5104s per loop
+iter 000140/000141 | nll loss: 4.0403 | 0.4258s per loop
+epoch 0009/0500 done, loss: 4.071552
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0009.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0009.ckpt
+iter 000010/000141 | nll loss: 4.0510 | 0.8738s per loop
+iter 000020/000141 | nll loss: 4.0618 | 0.4900s per loop
+iter 000030/000141 | nll loss: 4.0516 | 0.4848s per loop
+iter 000040/000141 | nll loss: 4.0219 | 0.4572s per loop
+iter 000050/000141 | nll loss: 4.0223 | 0.5229s per loop
+iter 000060/000141 | nll loss: 4.0418 | 0.4637s per loop
+iter 000070/000141 | nll loss: 4.0102 | 0.4596s per loop
+iter 000080/000141 | nll loss: 4.0128 | 0.4607s per loop
+iter 000090/000141 | nll loss: 4.0148 | 0.5709s per loop
+iter 000100/000141 | nll loss: 3.9898 | 0.5535s per loop
+iter 000110/000141 | nll loss: 4.0107 | 0.5035s per loop
+iter 000120/000141 | nll loss: 3.9945 | 0.4640s per loop
+iter 000130/000141 | nll loss: 4.0354 | 0.5260s per loop
+iter 000140/000141 | nll loss: 4.0370 | 0.4200s per loop
+epoch 0010/0500 done, loss: 4.003663
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0010.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0010.ckpt
+iter 000010/000141 | nll loss: 3.9981 | 0.8980s per loop
+iter 000020/000141 | nll loss: 3.9984 | 0.4673s per loop
+iter 000030/000141 | nll loss: 3.9862 | 0.4741s per loop
+iter 000040/000141 | nll loss: 3.9747 | 0.4703s per loop
+iter 000050/000141 | nll loss: 3.9714 | 0.5317s per loop
+iter 000060/000141 | nll loss: 3.9876 | 0.4878s per loop
+iter 000070/000141 | nll loss: 3.9732 | 0.4382s per loop
+iter 000080/000141 | nll loss: 3.9983 | 0.4637s per loop
+iter 000090/000141 | nll loss: 4.0024 | 0.5423s per loop
+iter 000100/000141 | nll loss: 3.9665 | 0.4695s per loop
+iter 000110/000141 | nll loss: 3.9896 | 0.4521s per loop
+iter 000120/000141 | nll loss: 3.9874 | 0.4746s per loop
+iter 000130/000141 | nll loss: 3.9724 | 0.4776s per loop
+iter 000140/000141 | nll loss: 3.9595 | 0.4038s per loop
+epoch 0011/0500 done, loss: 3.974257
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0011.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0011.ckpt
+iter 000010/000141 | nll loss: 3.9686 | 0.9317s per loop
+iter 000020/000141 | nll loss: 3.9488 | 0.4693s per loop
+iter 000030/000141 | nll loss: 3.9444 | 0.4621s per loop
+iter 000040/000141 | nll loss: 3.9483 | 0.4887s per loop
+iter 000050/000141 | nll loss: 3.9704 | 0.5073s per loop
+iter 000060/000141 | nll loss: 3.9842 | 0.4544s per loop
+iter 000070/000141 | nll loss: 3.9356 | 0.4597s per loop
+iter 000080/000141 | nll loss: 3.9447 | 0.4657s per loop
+iter 000090/000141 | nll loss: 3.9720 | 0.5383s per loop
+iter 000100/000141 | nll loss: 3.9297 | 0.4874s per loop
+iter 000110/000141 | nll loss: 3.9150 | 0.5037s per loop
+iter 000120/000141 | nll loss: 3.9628 | 0.5005s per loop
+iter 000130/000141 | nll loss: 3.9414 | 0.5329s per loop
+iter 000140/000141 | nll loss: 3.9447 | 0.4156s per loop
+epoch 0012/0500 done, loss: 3.929314
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0012.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0012.ckpt
+iter 000010/000141 | nll loss: 3.9461 | 0.9080s per loop
+iter 000020/000141 | nll loss: 3.9166 | 0.4896s per loop
+iter 000030/000141 | nll loss: 3.9249 | 0.4521s per loop
+iter 000040/000141 | nll loss: 3.9259 | 0.4763s per loop
+iter 000050/000141 | nll loss: 3.9122 | 0.5249s per loop
+iter 000060/000141 | nll loss: 3.9209 | 0.4885s per loop
+iter 000070/000141 | nll loss: 3.8983 | 0.4801s per loop
+iter 000080/000141 | nll loss: 3.9184 | 0.4675s per loop
+iter 000090/000141 | nll loss: 3.9447 | 0.5163s per loop
+iter 000100/000141 | nll loss: 3.9039 | 0.4761s per loop
+iter 000110/000141 | nll loss: 3.9095 | 0.4729s per loop
+iter 000120/000141 | nll loss: 3.9063 | 0.4648s per loop
+iter 000130/000141 | nll loss: 3.9291 | 0.5034s per loop
+iter 000140/000141 | nll loss: 3.9123 | 0.4533s per loop
+epoch 0013/0500 done, loss: 3.911930
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0013.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0013.ckpt
+iter 000010/000141 | nll loss: 3.9211 | 0.8762s per loop
+iter 000020/000141 | nll loss: 3.9152 | 0.4667s per loop
+iter 000030/000141 | nll loss: 3.9152 | 0.4635s per loop
+iter 000040/000141 | nll loss: 3.9073 | 0.4764s per loop
+iter 000050/000141 | nll loss: 3.8592 | 0.5204s per loop
+iter 000060/000141 | nll loss: 3.8881 | 0.4634s per loop
+iter 000070/000141 | nll loss: 3.8649 | 0.4812s per loop
+iter 000080/000141 | nll loss: 3.9061 | 0.5024s per loop
+iter 000090/000141 | nll loss: 3.8858 | 0.5789s per loop
+iter 000100/000141 | nll loss: 3.8748 | 0.4502s per loop
+iter 000110/000141 | nll loss: 3.8807 | 0.4555s per loop
+iter 000120/000141 | nll loss: 3.8682 | 0.4668s per loop
+iter 000130/000141 | nll loss: 3.9162 | 0.5331s per loop
+iter 000140/000141 | nll loss: 3.8874 | 0.4356s per loop
+epoch 0014/0500 done, loss: 3.846866
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0014.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0014.ckpt
+iter 000010/000141 | nll loss: 3.8561 | 0.9074s per loop
+iter 000020/000141 | nll loss: 3.8980 | 0.4722s per loop
+iter 000030/000141 | nll loss: 3.8692 | 0.4644s per loop
+iter 000040/000141 | nll loss: 3.8457 | 0.4631s per loop
+iter 000050/000141 | nll loss: 3.8900 | 0.5278s per loop
+iter 000060/000141 | nll loss: 3.8825 | 0.4709s per loop
+iter 000070/000141 | nll loss: 3.8510 | 0.4637s per loop
+iter 000080/000141 | nll loss: 3.8793 | 0.4513s per loop
+iter 000090/000141 | nll loss: 3.8423 | 0.5072s per loop
+iter 000100/000141 | nll loss: 3.8769 | 0.4470s per loop
+iter 000110/000141 | nll loss: 3.8420 | 0.4867s per loop
+iter 000120/000141 | nll loss: 3.8351 | 0.4645s per loop
+iter 000130/000141 | nll loss: 3.8336 | 0.5157s per loop
+iter 000140/000141 | nll loss: 3.8445 | 0.4385s per loop
+epoch 0015/0500 done, loss: 3.827464
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0015.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0015.ckpt
+iter 000010/000141 | nll loss: 3.8249 | 0.9283s per loop
+iter 000020/000141 | nll loss: 3.8536 | 0.4663s per loop
+iter 000030/000141 | nll loss: 3.8598 | 0.4646s per loop
+iter 000040/000141 | nll loss: 3.8878 | 0.4819s per loop
+iter 000050/000141 | nll loss: 3.8367 | 0.5220s per loop
+iter 000060/000141 | nll loss: 3.8400 | 0.4696s per loop
+iter 000070/000141 | nll loss: 3.8545 | 0.4473s per loop
+iter 000080/000141 | nll loss: 3.8346 | 0.4845s per loop
+iter 000090/000141 | nll loss: 3.8245 | 0.5433s per loop
+iter 000100/000141 | nll loss: 3.8124 | 0.4638s per loop
+iter 000110/000141 | nll loss: 3.8237 | 0.4830s per loop
+iter 000120/000141 | nll loss: 3.8505 | 0.4840s per loop
+iter 000130/000141 | nll loss: 3.8327 | 0.4933s per loop
+iter 000140/000141 | nll loss: 3.8212 | 0.4396s per loop
+epoch 0016/0500 done, loss: 3.801866
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0016.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0016.ckpt
+iter 000010/000141 | nll loss: 3.8197 | 0.9159s per loop
+iter 000020/000141 | nll loss: 3.8388 | 0.4899s per loop
+iter 000030/000141 | nll loss: 3.8455 | 0.4800s per loop
+iter 000040/000141 | nll loss: 3.8088 | 0.4511s per loop
+iter 000050/000141 | nll loss: 3.8235 | 0.5159s per loop
+iter 000060/000141 | nll loss: 3.8149 | 0.4805s per loop
+iter 000070/000141 | nll loss: 3.8083 | 0.4596s per loop
+iter 000080/000141 | nll loss: 3.8080 | 0.4539s per loop
+iter 000090/000141 | nll loss: 3.8503 | 0.5085s per loop
+iter 000100/000141 | nll loss: 3.8191 | 0.4615s per loop
+iter 000110/000141 | nll loss: 3.8386 | 0.4594s per loop
+iter 000120/000141 | nll loss: 3.8254 | 0.4702s per loop
+iter 000130/000141 | nll loss: 3.8164 | 0.5275s per loop
+iter 000140/000141 | nll loss: 3.8020 | 0.4312s per loop
+epoch 0017/0500 done, loss: 3.817891
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0017.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0017.ckpt
+iter 000010/000141 | nll loss: 3.8288 | 0.9037s per loop
+iter 000020/000141 | nll loss: 3.7910 | 0.4832s per loop
+iter 000030/000141 | nll loss: 3.7435 | 0.4630s per loop
+iter 000040/000141 | nll loss: 3.7770 | 0.4763s per loop
+iter 000050/000141 | nll loss: 3.8100 | 0.5490s per loop
+iter 000060/000141 | nll loss: 3.7868 | 0.4703s per loop
+iter 000070/000141 | nll loss: 3.8094 | 0.4801s per loop
+iter 000080/000141 | nll loss: 3.7927 | 0.4690s per loop
+iter 000090/000141 | nll loss: 3.8079 | 0.5303s per loop
+iter 000100/000141 | nll loss: 3.8272 | 0.4866s per loop
+iter 000110/000141 | nll loss: 3.7963 | 0.4656s per loop
+iter 000120/000141 | nll loss: 3.8146 | 0.4835s per loop
+iter 000130/000141 | nll loss: 3.8067 | 0.5073s per loop
+iter 000140/000141 | nll loss: 3.7786 | 0.4440s per loop
+epoch 0018/0500 done, loss: 3.810899
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0018.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0018.ckpt
+iter 000010/000141 | nll loss: 3.7871 | 0.9174s per loop
+iter 000020/000141 | nll loss: 3.8185 | 0.4610s per loop
+iter 000030/000141 | nll loss: 3.7856 | 0.4814s per loop
+iter 000040/000141 | nll loss: 3.7986 | 0.4610s per loop
+iter 000050/000141 | nll loss: 3.7624 | 0.5183s per loop
+iter 000060/000141 | nll loss: 3.7967 | 0.4717s per loop
+iter 000070/000141 | nll loss: 3.7859 | 0.4678s per loop
+iter 000080/000141 | nll loss: 3.7771 | 0.4807s per loop
+iter 000090/000141 | nll loss: 3.7771 | 0.5029s per loop
+iter 000100/000141 | nll loss: 3.7720 | 0.4761s per loop
+iter 000110/000141 | nll loss: 3.7767 | 0.4545s per loop
+iter 000120/000141 | nll loss: 3.8025 | 0.4867s per loop
+iter 000130/000141 | nll loss: 3.8178 | 0.5185s per loop
+iter 000140/000141 | nll loss: 3.7500 | 0.4259s per loop
+epoch 0019/0500 done, loss: 3.753676
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0019.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0019.ckpt
+iter 000010/000141 | nll loss: 3.8046 | 0.9193s per loop
+iter 000020/000141 | nll loss: 3.7795 | 0.4673s per loop
+iter 000030/000141 | nll loss: 3.7615 | 0.4508s per loop
+iter 000040/000141 | nll loss: 3.7597 | 0.4754s per loop
+iter 000050/000141 | nll loss: 3.7654 | 0.5225s per loop
+iter 000060/000141 | nll loss: 3.7544 | 0.4732s per loop
+iter 000070/000141 | nll loss: 3.7910 | 0.4718s per loop
+iter 000080/000141 | nll loss: 3.7654 | 0.4638s per loop
+iter 000090/000141 | nll loss: 3.7702 | 0.5270s per loop
+iter 000100/000141 | nll loss: 3.7552 | 0.4840s per loop
+iter 000110/000141 | nll loss: 3.7909 | 0.4726s per loop
+iter 000120/000141 | nll loss: 3.7739 | 0.4902s per loop
+iter 000130/000141 | nll loss: 3.7403 | 0.5148s per loop
+iter 000140/000141 | nll loss: 3.7510 | 0.4264s per loop
+epoch 0020/0500 done, loss: 3.755690
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0020.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0020.ckpt
+iter 000010/000141 | nll loss: 3.7505 | 0.8908s per loop
+iter 000020/000141 | nll loss: 3.7121 | 0.4876s per loop
+iter 000030/000141 | nll loss: 3.7385 | 0.4620s per loop
+iter 000040/000141 | nll loss: 3.7339 | 0.5023s per loop
+iter 000050/000141 | nll loss: 3.7420 | 0.5467s per loop
+iter 000060/000141 | nll loss: 3.7516 | 0.4708s per loop
+iter 000070/000141 | nll loss: 3.7693 | 0.4647s per loop
+iter 000080/000141 | nll loss: 3.7546 | 0.4771s per loop
+iter 000090/000141 | nll loss: 3.7259 | 0.5213s per loop
+iter 000100/000141 | nll loss: 3.7613 | 0.4722s per loop
+iter 000110/000141 | nll loss: 3.7668 | 0.4911s per loop
+iter 000120/000141 | nll loss: 3.7655 | 0.4765s per loop
+iter 000130/000141 | nll loss: 3.7402 | 0.5100s per loop
+iter 000140/000141 | nll loss: 3.7684 | 0.4490s per loop
+epoch 0021/0500 done, loss: 3.736121
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0021.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0021.ckpt
+iter 000010/000141 | nll loss: 3.7561 | 0.8997s per loop
+iter 000020/000141 | nll loss: 3.7797 | 0.4751s per loop
+iter 000030/000141 | nll loss: 3.7621 | 0.4709s per loop
+iter 000040/000141 | nll loss: 3.7418 | 0.4815s per loop
+iter 000050/000141 | nll loss: 3.7462 | 0.4989s per loop
+iter 000060/000141 | nll loss: 3.7427 | 0.4886s per loop
+iter 000070/000141 | nll loss: 3.7016 | 0.4660s per loop
+iter 000080/000141 | nll loss: 3.7251 | 0.4602s per loop
+iter 000090/000141 | nll loss: 3.7355 | 0.5105s per loop
+iter 000100/000141 | nll loss: 3.7638 | 0.4751s per loop
+iter 000110/000141 | nll loss: 3.7641 | 0.4610s per loop
+iter 000120/000141 | nll loss: 3.7574 | 0.5189s per loop
+iter 000130/000141 | nll loss: 3.7510 | 0.5410s per loop
+iter 000140/000141 | nll loss: 3.7475 | 0.4062s per loop
+epoch 0022/0500 done, loss: 3.689121
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0022.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0022.ckpt
+iter 000010/000141 | nll loss: 3.7334 | 0.9000s per loop
+iter 000020/000141 | nll loss: 3.7332 | 0.5001s per loop
+iter 000030/000141 | nll loss: 3.7444 | 0.4953s per loop
+iter 000040/000141 | nll loss: 3.7207 | 0.4643s per loop
+iter 000050/000141 | nll loss: 3.7226 | 0.5237s per loop
+iter 000060/000141 | nll loss: 3.7602 | 0.4725s per loop
+iter 000070/000141 | nll loss: 3.7417 | 0.4645s per loop
+iter 000080/000141 | nll loss: 3.7456 | 0.4615s per loop
+iter 000090/000141 | nll loss: 3.7169 | 0.5431s per loop
+iter 000100/000141 | nll loss: 3.7602 | 0.4728s per loop
+iter 000110/000141 | nll loss: 3.7562 | 0.4764s per loop
+iter 000120/000141 | nll loss: 3.7202 | 0.4664s per loop
+iter 000130/000141 | nll loss: 3.7020 | 0.5038s per loop
+iter 000140/000141 | nll loss: 3.7035 | 0.4276s per loop
+epoch 0023/0500 done, loss: 3.715228
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0023.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0023.ckpt
+iter 000010/000141 | nll loss: 3.7067 | 0.8929s per loop
+iter 000020/000141 | nll loss: 3.7309 | 0.4842s per loop
+iter 000030/000141 | nll loss: 3.7164 | 0.4622s per loop
+iter 000040/000141 | nll loss: 3.7133 | 0.4890s per loop
+iter 000050/000141 | nll loss: 3.7161 | 0.5282s per loop
+iter 000060/000141 | nll loss: 3.7427 | 0.4799s per loop
+iter 000070/000141 | nll loss: 3.7024 | 0.4763s per loop
+iter 000080/000141 | nll loss: 3.7264 | 0.4692s per loop
+iter 000090/000141 | nll loss: 3.7089 | 0.5378s per loop
+iter 000100/000141 | nll loss: 3.7272 | 0.4883s per loop
+iter 000110/000141 | nll loss: 3.7176 | 0.4618s per loop
+iter 000120/000141 | nll loss: 3.7229 | 0.4718s per loop
+iter 000130/000141 | nll loss: 3.7332 | 0.5160s per loop
+iter 000140/000141 | nll loss: 3.7202 | 0.4147s per loop
+epoch 0024/0500 done, loss: 3.740348
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0024.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0024.ckpt
+iter 000010/000141 | nll loss: 3.7226 | 0.9011s per loop
+iter 000020/000141 | nll loss: 3.7226 | 0.4726s per loop
+iter 000030/000141 | nll loss: 3.7106 | 0.4887s per loop
+iter 000040/000141 | nll loss: 3.7120 | 0.4844s per loop
+iter 000050/000141 | nll loss: 3.7257 | 0.5355s per loop
+iter 000060/000141 | nll loss: 3.7190 | 0.4587s per loop
+iter 000070/000141 | nll loss: 3.6991 | 0.4778s per loop
+iter 000080/000141 | nll loss: 3.7394 | 0.4553s per loop
+iter 000090/000141 | nll loss: 3.7103 | 0.5260s per loop
+iter 000100/000141 | nll loss: 3.7176 | 0.4734s per loop
+iter 000110/000141 | nll loss: 3.7143 | 0.4524s per loop
+iter 000120/000141 | nll loss: 3.6670 | 0.4912s per loop
+iter 000130/000141 | nll loss: 3.7151 | 0.5152s per loop
+iter 000140/000141 | nll loss: 3.7332 | 0.4201s per loop
+epoch 0025/0500 done, loss: 3.708429
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0025.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0025.ckpt
+iter 000010/000141 | nll loss: 3.7203 | 0.9218s per loop
+iter 000020/000141 | nll loss: 3.7194 | 0.4763s per loop
+iter 000030/000141 | nll loss: 3.7120 | 0.4641s per loop
+iter 000040/000141 | nll loss: 3.6883 | 0.4763s per loop
+iter 000050/000141 | nll loss: 3.7320 | 0.5210s per loop
+iter 000060/000141 | nll loss: 3.6899 | 0.4842s per loop
+iter 000070/000141 | nll loss: 3.7130 | 0.4524s per loop
+iter 000080/000141 | nll loss: 3.7025 | 0.4796s per loop
+iter 000090/000141 | nll loss: 3.6715 | 0.5352s per loop
+iter 000100/000141 | nll loss: 3.7070 | 0.4772s per loop
+iter 000110/000141 | nll loss: 3.7116 | 0.4549s per loop
+iter 000120/000141 | nll loss: 3.7166 | 0.4970s per loop
+iter 000130/000141 | nll loss: 3.7360 | 0.5033s per loop
+iter 000140/000141 | nll loss: 3.7171 | 0.4257s per loop
+epoch 0026/0500 done, loss: 3.702841
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0026.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0026.ckpt
+iter 000010/000141 | nll loss: 3.7251 | 0.9166s per loop
+iter 000020/000141 | nll loss: 3.6950 | 0.4744s per loop
+iter 000030/000141 | nll loss: 3.7163 | 0.4712s per loop
+iter 000040/000141 | nll loss: 3.7285 | 0.4792s per loop
+iter 000050/000141 | nll loss: 3.6827 | 0.4747s per loop
+iter 000060/000141 | nll loss: 3.6957 | 0.4690s per loop
+iter 000070/000141 | nll loss: 3.6950 | 0.4712s per loop
+iter 000080/000141 | nll loss: 3.7135 | 0.4816s per loop
+iter 000090/000141 | nll loss: 3.6952 | 0.5338s per loop
+iter 000100/000141 | nll loss: 3.6853 | 0.4873s per loop
+iter 000110/000141 | nll loss: 3.7188 | 0.4729s per loop
+iter 000120/000141 | nll loss: 3.7123 | 0.4746s per loop
+iter 000130/000141 | nll loss: 3.7060 | 0.5008s per loop
+iter 000140/000141 | nll loss: 3.7165 | 0.4191s per loop
+epoch 0027/0500 done, loss: 3.679297
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0027.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0027.ckpt
+iter 000010/000141 | nll loss: 3.6875 | 0.8914s per loop
+iter 000020/000141 | nll loss: 3.6956 | 0.4698s per loop
+iter 000030/000141 | nll loss: 3.6886 | 0.4481s per loop
+iter 000040/000141 | nll loss: 3.7005 | 0.4767s per loop
+iter 000050/000141 | nll loss: 3.6696 | 0.5100s per loop
+iter 000060/000141 | nll loss: 3.6951 | 0.4706s per loop
+iter 000070/000141 | nll loss: 3.7050 | 0.4843s per loop
+iter 000080/000141 | nll loss: 3.6899 | 0.4639s per loop
+iter 000090/000141 | nll loss: 3.6833 | 0.5096s per loop
+iter 000100/000141 | nll loss: 3.6990 | 0.4658s per loop
+iter 000110/000141 | nll loss: 3.6494 | 0.4746s per loop
+iter 000120/000141 | nll loss: 3.6553 | 0.4676s per loop
+iter 000130/000141 | nll loss: 3.6650 | 0.5479s per loop
+iter 000140/000141 | nll loss: 3.6550 | 0.4245s per loop
+epoch 0028/0500 done, loss: 3.708781
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0028.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0028.ckpt
+iter 000010/000141 | nll loss: 3.6485 | 0.8906s per loop
+iter 000020/000141 | nll loss: 3.7201 | 0.4645s per loop
+iter 000030/000141 | nll loss: 3.6937 | 0.4659s per loop
+iter 000040/000141 | nll loss: 3.6838 | 0.4660s per loop
+iter 000050/000141 | nll loss: 3.7340 | 0.5334s per loop
+iter 000060/000141 | nll loss: 3.6789 | 0.4690s per loop
+iter 000070/000141 | nll loss: 3.6944 | 0.4572s per loop
+iter 000080/000141 | nll loss: 3.6914 | 0.4576s per loop
+iter 000090/000141 | nll loss: 3.6891 | 0.5519s per loop
+iter 000100/000141 | nll loss: 3.6853 | 0.4795s per loop
+iter 000110/000141 | nll loss: 3.6343 | 0.4594s per loop
+iter 000120/000141 | nll loss: 3.6661 | 0.4748s per loop
+iter 000130/000141 | nll loss: 3.6817 | 0.5079s per loop
+iter 000140/000141 | nll loss: 3.6888 | 0.4269s per loop
+epoch 0029/0500 done, loss: 3.726001
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0029.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0029.ckpt
+iter 000010/000141 | nll loss: 3.6932 | 0.8998s per loop
+iter 000020/000141 | nll loss: 3.6991 | 0.4716s per loop
+iter 000030/000141 | nll loss: 3.6681 | 0.4681s per loop
+iter 000040/000141 | nll loss: 3.6529 | 0.4860s per loop
+iter 000050/000141 | nll loss: 3.6844 | 0.5229s per loop
+iter 000060/000141 | nll loss: 3.6753 | 0.4541s per loop
+iter 000070/000141 | nll loss: 3.6962 | 0.4625s per loop
+iter 000080/000141 | nll loss: 3.7107 | 0.4632s per loop
+iter 000090/000141 | nll loss: 3.6723 | 0.5503s per loop
+iter 000100/000141 | nll loss: 3.6926 | 0.5334s per loop
+iter 000110/000141 | nll loss: 3.6762 | 0.4535s per loop
+iter 000120/000141 | nll loss: 3.6763 | 0.4747s per loop
+iter 000130/000141 | nll loss: 3.7088 | 0.5196s per loop
+iter 000140/000141 | nll loss: 3.6950 | 0.4307s per loop
+epoch 0030/0500 done, loss: 3.670344
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0030.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0030.ckpt
+iter 000010/000141 | nll loss: 3.6519 | 0.9862s per loop
+iter 000020/000141 | nll loss: 3.6512 | 0.4632s per loop
+iter 000030/000141 | nll loss: 3.6717 | 0.4748s per loop
+iter 000040/000141 | nll loss: 3.6805 | 0.4680s per loop
+iter 000050/000141 | nll loss: 3.6840 | 0.5202s per loop
+iter 000060/000141 | nll loss: 3.6888 | 0.4635s per loop
+iter 000070/000141 | nll loss: 3.6457 | 0.4739s per loop
+iter 000080/000141 | nll loss: 3.6515 | 0.4705s per loop
+iter 000090/000141 | nll loss: 3.6514 | 0.4941s per loop
+iter 000100/000141 | nll loss: 3.6898 | 0.4887s per loop
+iter 000110/000141 | nll loss: 3.6997 | 0.4582s per loop
+iter 000120/000141 | nll loss: 3.6715 | 0.4844s per loop
+iter 000130/000141 | nll loss: 3.6615 | 0.5150s per loop
+iter 000140/000141 | nll loss: 3.6959 | 0.4245s per loop
+epoch 0031/0500 done, loss: 3.649914
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0031.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0031.ckpt
+iter 000010/000141 | nll loss: 3.6600 | 0.8809s per loop
+iter 000020/000141 | nll loss: 3.6500 | 0.4705s per loop
+iter 000030/000141 | nll loss: 3.6406 | 0.4897s per loop
+iter 000040/000141 | nll loss: 3.6310 | 0.5320s per loop
+iter 000050/000141 | nll loss: 3.6842 | 0.6371s per loop
+iter 000060/000141 | nll loss: 3.6376 | 0.5536s per loop
+iter 000070/000141 | nll loss: 3.6555 | 0.5541s per loop
+iter 000080/000141 | nll loss: 3.6693 | 0.5488s per loop
+iter 000090/000141 | nll loss: 3.6771 | 0.6422s per loop
+iter 000100/000141 | nll loss: 3.6414 | 0.5750s per loop
+iter 000110/000141 | nll loss: 3.6744 | 0.5195s per loop
+iter 000120/000141 | nll loss: 3.6611 | 0.4714s per loop
+iter 000130/000141 | nll loss: 3.6622 | 0.4849s per loop
+iter 000140/000141 | nll loss: 3.6447 | 0.4678s per loop
+epoch 0032/0500 done, loss: 3.650408
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0032.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0032.ckpt
+iter 000010/000141 | nll loss: 3.6522 | 0.8862s per loop
+iter 000020/000141 | nll loss: 3.6440 | 0.4764s per loop
+iter 000030/000141 | nll loss: 3.6559 | 0.4649s per loop
+iter 000040/000141 | nll loss: 3.6489 | 0.4611s per loop
+iter 000050/000141 | nll loss: 3.6629 | 0.5358s per loop
+iter 000060/000141 | nll loss: 3.6522 | 0.4946s per loop
+iter 000070/000141 | nll loss: 3.6723 | 0.4514s per loop
+iter 000080/000141 | nll loss: 3.6322 | 0.4755s per loop
+iter 000090/000141 | nll loss: 3.6601 | 0.5111s per loop
+iter 000100/000141 | nll loss: 3.6330 | 0.4711s per loop
+iter 000110/000141 | nll loss: 3.6876 | 0.4617s per loop
+iter 000120/000141 | nll loss: 3.6343 | 0.4877s per loop
+iter 000130/000141 | nll loss: 3.6427 | 0.4967s per loop
+iter 000140/000141 | nll loss: 3.6575 | 0.4179s per loop
+epoch 0033/0500 done, loss: 3.666962
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0033.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0033.ckpt
+iter 000010/000141 | nll loss: 3.6457 | 0.9149s per loop
+iter 000020/000141 | nll loss: 3.6177 | 0.5152s per loop
+iter 000030/000141 | nll loss: 3.6412 | 0.5551s per loop
+iter 000040/000141 | nll loss: 3.6241 | 0.5027s per loop
+iter 000050/000141 | nll loss: 3.6231 | 0.5026s per loop
+iter 000060/000141 | nll loss: 3.6634 | 0.4651s per loop
+iter 000070/000141 | nll loss: 3.6490 | 0.4799s per loop
+iter 000080/000141 | nll loss: 3.6351 | 0.4738s per loop
+iter 000090/000141 | nll loss: 3.6714 | 0.5134s per loop
+iter 000100/000141 | nll loss: 3.6817 | 0.4626s per loop
+iter 000110/000141 | nll loss: 3.6411 | 0.4546s per loop
+iter 000120/000141 | nll loss: 3.6174 | 0.4616s per loop
+iter 000130/000141 | nll loss: 3.6680 | 0.5060s per loop
+iter 000140/000141 | nll loss: 3.6534 | 0.4270s per loop
+epoch 0034/0500 done, loss: 3.605925
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0034.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0034.ckpt
+iter 000010/000141 | nll loss: 3.6395 | 0.8889s per loop
+iter 000020/000141 | nll loss: 3.6530 | 0.4875s per loop
+iter 000030/000141 | nll loss: 3.6407 | 0.4851s per loop
+iter 000040/000141 | nll loss: 3.6251 | 0.5081s per loop
+iter 000050/000141 | nll loss: 3.6534 | 0.5828s per loop
+iter 000060/000141 | nll loss: 3.6454 | 0.4796s per loop
+iter 000070/000141 | nll loss: 3.6502 | 0.4676s per loop
+iter 000080/000141 | nll loss: 3.6531 | 0.4798s per loop
+iter 000090/000141 | nll loss: 3.6342 | 0.5191s per loop
+iter 000100/000141 | nll loss: 3.6390 | 0.4670s per loop
+iter 000110/000141 | nll loss: 3.6462 | 0.4760s per loop
+iter 000120/000141 | nll loss: 3.6293 | 0.4750s per loop
+iter 000130/000141 | nll loss: 3.6259 | 0.4964s per loop
+iter 000140/000141 | nll loss: 3.6555 | 0.4002s per loop
+epoch 0035/0500 done, loss: 3.633496
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0035.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0035.ckpt
+iter 000010/000141 | nll loss: 3.6630 | 0.8944s per loop
+iter 000020/000141 | nll loss: 3.6222 | 0.4577s per loop
+iter 000030/000141 | nll loss: 3.6600 | 0.4627s per loop
+iter 000040/000141 | nll loss: 3.6538 | 0.4500s per loop
+iter 000050/000141 | nll loss: 3.6134 | 0.5266s per loop
+iter 000060/000141 | nll loss: 3.6568 | 0.4819s per loop
+iter 000070/000141 | nll loss: 3.6089 | 0.4561s per loop
+iter 000080/000141 | nll loss: 3.6426 | 0.4637s per loop
+iter 000090/000141 | nll loss: 3.6646 | 0.5363s per loop
+iter 000100/000141 | nll loss: 3.6404 | 0.4606s per loop
+iter 000110/000141 | nll loss: 3.6584 | 0.4723s per loop
+iter 000120/000141 | nll loss: 3.6248 | 0.4700s per loop
+iter 000130/000141 | nll loss: 3.6424 | 0.5073s per loop
+iter 000140/000141 | nll loss: 3.6910 | 0.4138s per loop
+epoch 0036/0500 done, loss: 3.662744
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0036.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0036.ckpt
+iter 000010/000141 | nll loss: 3.6321 | 0.8744s per loop
+iter 000020/000141 | nll loss: 3.6277 | 0.4690s per loop
+iter 000030/000141 | nll loss: 3.6326 | 0.4620s per loop
+iter 000040/000141 | nll loss: 3.6153 | 0.4681s per loop
+iter 000050/000141 | nll loss: 3.6470 | 0.5530s per loop
+iter 000060/000141 | nll loss: 3.6538 | 0.4712s per loop
+iter 000070/000141 | nll loss: 3.6274 | 0.4726s per loop
+iter 000080/000141 | nll loss: 3.6402 | 0.4716s per loop
+iter 000090/000141 | nll loss: 3.6717 | 0.5212s per loop
+iter 000100/000141 | nll loss: 3.6236 | 0.4415s per loop
+iter 000110/000141 | nll loss: 3.6122 | 0.4654s per loop
+iter 000120/000141 | nll loss: 3.6192 | 0.4992s per loop
+iter 000130/000141 | nll loss: 3.6597 | 0.5119s per loop
+iter 000140/000141 | nll loss: 3.6612 | 0.4145s per loop
+epoch 0037/0500 done, loss: 3.628665
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0037.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0037.ckpt
+iter 000010/000141 | nll loss: 3.6190 | 0.9005s per loop
+iter 000020/000141 | nll loss: 3.6504 | 0.4531s per loop
+iter 000030/000141 | nll loss: 3.6264 | 0.4631s per loop
+iter 000040/000141 | nll loss: 3.6319 | 0.4585s per loop
+iter 000050/000141 | nll loss: 3.6482 | 0.5051s per loop
+iter 000060/000141 | nll loss: 3.6136 | 0.4598s per loop
+iter 000070/000141 | nll loss: 3.6235 | 0.4762s per loop
+iter 000080/000141 | nll loss: 3.6271 | 0.4547s per loop
+iter 000090/000141 | nll loss: 3.5902 | 0.5052s per loop
+iter 000100/000141 | nll loss: 3.5853 | 0.4783s per loop
+iter 000110/000141 | nll loss: 3.6509 | 0.5323s per loop
+iter 000120/000141 | nll loss: 3.6429 | 0.4790s per loop
+iter 000130/000141 | nll loss: 3.5851 | 0.5324s per loop
+iter 000140/000141 | nll loss: 3.6287 | 0.4424s per loop
+epoch 0038/0500 done, loss: 3.615839
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0038.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0038.ckpt
+iter 000010/000141 | nll loss: 3.6272 | 0.8784s per loop
+iter 000020/000141 | nll loss: 3.5881 | 0.4599s per loop
+iter 000030/000141 | nll loss: 3.6117 | 0.4784s per loop
+iter 000040/000141 | nll loss: 3.5739 | 0.4853s per loop
+iter 000050/000141 | nll loss: 3.6267 | 0.5247s per loop
+iter 000060/000141 | nll loss: 3.6015 | 0.4988s per loop
+iter 000070/000141 | nll loss: 3.6092 | 0.4941s per loop
+iter 000080/000141 | nll loss: 3.5982 | 0.4808s per loop
+iter 000090/000141 | nll loss: 3.5991 | 0.5197s per loop
+iter 000100/000141 | nll loss: 3.6055 | 0.4578s per loop
+iter 000110/000141 | nll loss: 3.5973 | 0.4597s per loop
+iter 000120/000141 | nll loss: 3.6344 | 0.4586s per loop
+iter 000130/000141 | nll loss: 3.6214 | 0.5295s per loop
+iter 000140/000141 | nll loss: 3.6286 | 0.4033s per loop
+epoch 0039/0500 done, loss: 3.607720
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0039.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0039.ckpt
+iter 000010/000141 | nll loss: 3.5937 | 0.9052s per loop
+iter 000020/000141 | nll loss: 3.6370 | 0.4796s per loop
+iter 000030/000141 | nll loss: 3.6099 | 0.4847s per loop
+iter 000040/000141 | nll loss: 3.6381 | 0.4978s per loop
+iter 000050/000141 | nll loss: 3.6153 | 0.5114s per loop
+iter 000060/000141 | nll loss: 3.6277 | 0.4802s per loop
+iter 000070/000141 | nll loss: 3.6329 | 0.4750s per loop
+iter 000080/000141 | nll loss: 3.5844 | 0.4634s per loop
+iter 000090/000141 | nll loss: 3.6176 | 0.5041s per loop
+iter 000100/000141 | nll loss: 3.6387 | 0.4772s per loop
+iter 000110/000141 | nll loss: 3.6088 | 0.4640s per loop
+iter 000120/000141 | nll loss: 3.6365 | 0.4622s per loop
+iter 000130/000141 | nll loss: 3.6138 | 0.5117s per loop
+iter 000140/000141 | nll loss: 3.6095 | 0.4290s per loop
+epoch 0040/0500 done, loss: 3.598424
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0040.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0040.ckpt
+iter 000010/000141 | nll loss: 3.6022 | 0.9204s per loop
+iter 000020/000141 | nll loss: 3.5930 | 0.4620s per loop
+iter 000030/000141 | nll loss: 3.5793 | 0.4681s per loop
+iter 000040/000141 | nll loss: 3.6200 | 0.4827s per loop
+iter 000050/000141 | nll loss: 3.6135 | 0.6312s per loop
+iter 000060/000141 | nll loss: 3.6197 | 0.5002s per loop
+iter 000070/000141 | nll loss: 3.6018 | 0.4711s per loop
+iter 000080/000141 | nll loss: 3.6310 | 0.4796s per loop
+iter 000090/000141 | nll loss: 3.6487 | 0.5193s per loop
+iter 000100/000141 | nll loss: 3.6110 | 0.4570s per loop
+iter 000110/000141 | nll loss: 3.6206 | 0.4649s per loop
+iter 000120/000141 | nll loss: 3.6187 | 0.4844s per loop
+iter 000130/000141 | nll loss: 3.5815 | 0.4891s per loop
+iter 000140/000141 | nll loss: 3.5928 | 0.4153s per loop
+epoch 0041/0500 done, loss: 3.588399
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0041.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0041.ckpt
+iter 000010/000141 | nll loss: 3.6165 | 0.8856s per loop
+iter 000020/000141 | nll loss: 3.5787 | 0.4563s per loop
+iter 000030/000141 | nll loss: 3.6262 | 0.4747s per loop
+iter 000040/000141 | nll loss: 3.5983 | 0.4433s per loop
+iter 000050/000141 | nll loss: 3.5681 | 0.5130s per loop
+iter 000060/000141 | nll loss: 3.6097 | 0.4677s per loop
+iter 000070/000141 | nll loss: 3.6225 | 0.4697s per loop
+iter 000080/000141 | nll loss: 3.5938 | 0.4623s per loop
+iter 000090/000141 | nll loss: 3.5914 | 0.5300s per loop
+iter 000100/000141 | nll loss: 3.5971 | 0.4495s per loop
+iter 000110/000141 | nll loss: 3.5985 | 0.4540s per loop
+iter 000120/000141 | nll loss: 3.6387 | 0.4660s per loop
+iter 000130/000141 | nll loss: 3.6292 | 0.4902s per loop
+iter 000140/000141 | nll loss: 3.5938 | 0.4203s per loop
+epoch 0042/0500 done, loss: 3.618502
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0042.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0042.ckpt
+iter 000010/000141 | nll loss: 3.6088 | 0.8997s per loop
+iter 000020/000141 | nll loss: 3.5895 | 0.4599s per loop
+iter 000030/000141 | nll loss: 3.6022 | 0.4633s per loop
+iter 000040/000141 | nll loss: 3.6167 | 0.4595s per loop
+iter 000050/000141 | nll loss: 3.6527 | 0.5128s per loop
+iter 000060/000141 | nll loss: 3.5805 | 0.4758s per loop
+iter 000070/000141 | nll loss: 3.5514 | 0.4651s per loop
+iter 000080/000141 | nll loss: 3.5836 | 0.4603s per loop
+iter 000090/000141 | nll loss: 3.6107 | 0.5266s per loop
+iter 000100/000141 | nll loss: 3.5894 | 0.4526s per loop
+iter 000110/000141 | nll loss: 3.5960 | 0.4653s per loop
+iter 000120/000141 | nll loss: 3.5910 | 0.4824s per loop
+iter 000130/000141 | nll loss: 3.5853 | 0.5024s per loop
+iter 000140/000141 | nll loss: 3.6085 | 0.4382s per loop
+epoch 0043/0500 done, loss: 3.597683
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0043.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0043.ckpt
+iter 000010/000141 | nll loss: 3.5980 | 0.9057s per loop
+iter 000020/000141 | nll loss: 3.6118 | 0.4667s per loop
+iter 000030/000141 | nll loss: 3.6044 | 0.4708s per loop
+iter 000040/000141 | nll loss: 3.5982 | 0.4637s per loop
+iter 000050/000141 | nll loss: 3.6042 | 0.5249s per loop
+iter 000060/000141 | nll loss: 3.5777 | 0.4755s per loop
+iter 000070/000141 | nll loss: 3.5864 | 0.4927s per loop
+iter 000080/000141 | nll loss: 3.5833 | 0.4431s per loop
+iter 000090/000141 | nll loss: 3.6070 | 0.5174s per loop
+iter 000100/000141 | nll loss: 3.5795 | 0.4780s per loop
+iter 000110/000141 | nll loss: 3.6082 | 0.4639s per loop
+iter 000120/000141 | nll loss: 3.6024 | 0.4652s per loop
+iter 000130/000141 | nll loss: 3.5733 | 0.4972s per loop
+iter 000140/000141 | nll loss: 3.5904 | 0.4198s per loop
+epoch 0044/0500 done, loss: 3.611161
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0044.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0044.ckpt
+iter 000010/000141 | nll loss: 3.5876 | 0.8872s per loop
+iter 000020/000141 | nll loss: 3.5497 | 0.4740s per loop
+iter 000030/000141 | nll loss: 3.6099 | 0.4669s per loop
+iter 000040/000141 | nll loss: 3.6056 | 0.4731s per loop
+iter 000050/000141 | nll loss: 3.5585 | 0.5308s per loop
+iter 000060/000141 | nll loss: 3.6297 | 0.4617s per loop
+iter 000070/000141 | nll loss: 3.6001 | 0.4812s per loop
+iter 000080/000141 | nll loss: 3.5591 | 0.4695s per loop
+iter 000090/000141 | nll loss: 3.5885 | 0.5033s per loop
+iter 000100/000141 | nll loss: 3.6079 | 0.4692s per loop
+iter 000110/000141 | nll loss: 3.5707 | 0.4878s per loop
+iter 000120/000141 | nll loss: 3.6000 | 0.4549s per loop
+iter 000130/000141 | nll loss: 3.5738 | 0.4977s per loop
+iter 000140/000141 | nll loss: 3.5972 | 0.4213s per loop
+epoch 0045/0500 done, loss: 3.595225
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0045.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0045.ckpt
+iter 000010/000141 | nll loss: 3.5961 | 0.8976s per loop
+iter 000020/000141 | nll loss: 3.5899 | 0.4595s per loop
+iter 000030/000141 | nll loss: 3.5636 | 0.4652s per loop
+iter 000040/000141 | nll loss: 3.6106 | 0.4757s per loop
+iter 000050/000141 | nll loss: 3.5841 | 0.5194s per loop
+iter 000060/000141 | nll loss: 3.5822 | 0.4538s per loop
+iter 000070/000141 | nll loss: 3.6165 | 0.4824s per loop
+iter 000080/000141 | nll loss: 3.5536 | 0.4596s per loop
+iter 000090/000141 | nll loss: 3.5982 | 0.5205s per loop
+iter 000100/000141 | nll loss: 3.5696 | 0.4657s per loop
+iter 000110/000141 | nll loss: 3.6011 | 0.4872s per loop
+iter 000120/000141 | nll loss: 3.5838 | 0.4801s per loop
+iter 000130/000141 | nll loss: 3.6040 | 0.4800s per loop
+iter 000140/000141 | nll loss: 3.5811 | 0.4282s per loop
+epoch 0046/0500 done, loss: 3.613668
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0046.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0046.ckpt
+iter 000010/000141 | nll loss: 3.6081 | 0.8954s per loop
+iter 000020/000141 | nll loss: 3.6062 | 0.4675s per loop
+iter 000030/000141 | nll loss: 3.5940 | 0.4649s per loop
+iter 000040/000141 | nll loss: 3.5848 | 0.4809s per loop
+iter 000050/000141 | nll loss: 3.5838 | 0.4935s per loop
+iter 000060/000141 | nll loss: 3.5638 | 0.4666s per loop
+iter 000070/000141 | nll loss: 3.6171 | 0.4793s per loop
+iter 000080/000141 | nll loss: 3.5533 | 0.5018s per loop
+iter 000090/000141 | nll loss: 3.5659 | 0.4904s per loop
+iter 000100/000141 | nll loss: 3.5850 | 0.4791s per loop
+iter 000110/000141 | nll loss: 3.6102 | 0.5234s per loop
+iter 000120/000141 | nll loss: 3.6024 | 0.4943s per loop
+iter 000130/000141 | nll loss: 3.5616 | 0.4934s per loop
+iter 000140/000141 | nll loss: 3.5810 | 0.4440s per loop
+epoch 0047/0500 done, loss: 3.577709
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0047.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0047.ckpt
+iter 000010/000141 | nll loss: 3.5518 | 0.9022s per loop
+iter 000020/000141 | nll loss: 3.5569 | 0.4591s per loop
+iter 000030/000141 | nll loss: 3.5724 | 0.4684s per loop
+iter 000040/000141 | nll loss: 3.6099 | 0.4647s per loop
+iter 000050/000141 | nll loss: 3.6068 | 0.5030s per loop
+iter 000060/000141 | nll loss: 3.5512 | 0.4655s per loop
+iter 000070/000141 | nll loss: 3.5835 | 0.4574s per loop
+iter 000080/000141 | nll loss: 3.5969 | 0.4432s per loop
+iter 000090/000141 | nll loss: 3.5691 | 0.5182s per loop
+iter 000100/000141 | nll loss: 3.5743 | 0.4825s per loop
+iter 000110/000141 | nll loss: 3.5430 | 0.4646s per loop
+iter 000120/000141 | nll loss: 3.5455 | 0.4762s per loop
+iter 000130/000141 | nll loss: 3.5505 | 0.4903s per loop
+iter 000140/000141 | nll loss: 3.5599 | 0.4408s per loop
+epoch 0048/0500 done, loss: 3.516553
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0048.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0048.ckpt
+iter 000010/000141 | nll loss: 3.5808 | 0.9159s per loop
+iter 000020/000141 | nll loss: 3.5489 | 0.4965s per loop
+iter 000030/000141 | nll loss: 3.5984 | 0.4943s per loop
+iter 000040/000141 | nll loss: 3.5554 | 0.4839s per loop
+iter 000050/000141 | nll loss: 3.5676 | 0.5194s per loop
+iter 000060/000141 | nll loss: 3.5429 | 0.4819s per loop
+iter 000070/000141 | nll loss: 3.5695 | 0.4745s per loop
+iter 000080/000141 | nll loss: 3.5955 | 0.4956s per loop
+iter 000090/000141 | nll loss: 3.5554 | 0.5313s per loop
+iter 000100/000141 | nll loss: 3.5525 | 0.4750s per loop
+iter 000110/000141 | nll loss: 3.5431 | 0.6505s per loop
+iter 000120/000141 | nll loss: 3.5689 | 0.6718s per loop
+iter 000130/000141 | nll loss: 3.5860 | 0.8852s per loop
+iter 000140/000141 | nll loss: 3.5454 | 0.4457s per loop
+epoch 0049/0500 done, loss: 3.581531
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0049.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0049.ckpt
+iter 000010/000141 | nll loss: 3.5791 | 0.9022s per loop
+iter 000020/000141 | nll loss: 3.5892 | 0.4714s per loop
+iter 000030/000141 | nll loss: 3.5471 | 0.4916s per loop
+iter 000040/000141 | nll loss: 3.5781 | 0.4637s per loop
+iter 000050/000141 | nll loss: 3.5439 | 0.5443s per loop
+iter 000060/000141 | nll loss: 3.5657 | 0.4679s per loop
+iter 000070/000141 | nll loss: 3.5665 | 0.4623s per loop
+iter 000080/000141 | nll loss: 3.5638 | 0.4669s per loop
+iter 000090/000141 | nll loss: 3.5819 | 0.5345s per loop
+iter 000100/000141 | nll loss: 3.6095 | 0.4583s per loop
+iter 000110/000141 | nll loss: 3.5917 | 0.4656s per loop
+iter 000120/000141 | nll loss: 3.5702 | 0.4624s per loop
+iter 000130/000141 | nll loss: 3.5537 | 0.5530s per loop
+iter 000140/000141 | nll loss: 3.5706 | 0.4078s per loop
+epoch 0050/0500 done, loss: 3.595510
+saved encoder model to ../models/resnet_10/b064_s224_l016/ep0050.ckpt
+saved decoder model to ../models/LSTM_2/b064_s224_l016/ep0050.ckpt
+iter 000010/000141 | nll loss: 3.5942 | 1.4923s per loop
+iter 000020/000141 | nll loss: 3.6015 | 0.6312s per loop
+iter 000030/000141 | nll loss: 3.6080 | 0.6440s per loop
+iter 000040/000141 | nll loss: 3.5309 | 0.6341s per loop
+iter 000050/000141 | nll loss: 3.5545 | 0.6441s per loop

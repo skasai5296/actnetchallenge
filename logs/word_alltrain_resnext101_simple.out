@@ -1,0 +1,48 @@
+Namespace(annpath='train.json', batch_size=1, bs=8, clip_len=64, cuda=True, dataparallel=True, emb_init='../wordvectors/glove.6B.300d.txt', embedding_size=512, feature_size=2048, framepath='frames', ft_begin_index=0, imsize=224, langmethod='Transformer', log_every=10, lr=0.001, lstm_memory=512, lstm_pretrain_ep=0, lstm_stacks=1, manual_seed=1, max_epochs=1000, max_seqlen=30, meta_path='videometa_train.json', mode='train', model_ep=100, model_path='../models', modeldepth=101, modelname='resnext', momentum=0.9, n_classes=739, n_cpu=8, n_finetune_classes=739, norm_value=1, num_layers=18, patience=10, pretrain_path='../models/save_105.pth', resnet_shortcut='A', resnext_cardinality=32, root_path='/ssd1/dsets/activitynet_captions', start_from_ep=0, submission_path='submission.json', token_level=False, vocabpath='vocab_pad.json', weight_decay=0.0001, wide_resnet_k=2)
+loaded dictionary from /ssd1/dsets/activitynet_captions/vocab_pad.json
+dictionary length: 11182 words
+loaded pretrain models from ../models/save_105.pth
+using 4 gpus...
+# of params in model : 98433984
+start decoder pretraining, doing for 0 epochs
+done with decoder pretraining
+start training
+elapsed: 28s | iter 000010/001133 | nll loss: 9.7138 | 2.8341s per loop
+elapsed: 45s | iter 000020/001133 | nll loss: 9.0911 | 1.7490s per loop
+elapsed: 01m05s | iter 000030/001133 | nll loss: 8.4703 | 1.9318s per loop
+elapsed: 01m24s | iter 000040/001133 | nll loss: 8.0352 | 1.9451s per loop
+elapsed: 01m44s | iter 000050/001133 | nll loss: 7.6831 | 2.0200s per loop
+elapsed: 02m07s | iter 000060/001133 | nll loss: 7.8892 | 2.2925s per loop
+elapsed: 02m29s | iter 000070/001133 | nll loss: 7.8395 | 2.1772s per loop
+elapsed: 02m52s | iter 000080/001133 | nll loss: 7.8463 | 2.2511s per loop
+elapsed: 03m14s | iter 000090/001133 | nll loss: 7.7960 | 2.2131s per loop
+elapsed: 03m36s | iter 000100/001133 | nll loss: 7.8618 | 2.2479s per loop
+elapsed: 03m57s | iter 000110/001133 | nll loss: 7.7516 | 2.0405s per loop
+elapsed: 04m19s | iter 000120/001133 | nll loss: 7.6180 | 2.2459s per loop
+elapsed: 04m45s | iter 000130/001133 | nll loss: 7.5438 | 2.6455s per loop
+elapsed: 05m13s | iter 000140/001133 | nll loss: 7.5866 | 2.7077s per loop
+elapsed: 05m43s | iter 000150/001133 | nll loss: 7.5834 | 2.9994s per loop
+elapsed: 06m06s | iter 000160/001133 | nll loss: 7.4700 | 2.3624s per loop
+elapsed: 06m31s | iter 000170/001133 | nll loss: 7.4266 | 2.4523s per loop
+elapsed: 06m58s | iter 000180/001133 | nll loss: 7.5010 | 2.7561s per loop
+elapsed: 07m22s | iter 000190/001133 | nll loss: 7.4304 | 2.4192s per loop
+elapsed: 07m49s | iter 000200/001133 | nll loss: 7.4074 | 2.6279s per loop
+elapsed: 08m12s | iter 000210/001133 | nll loss: 7.2576 | 2.3500s per loop
+elapsed: 08m40s | iter 000220/001133 | nll loss: 7.2347 | 2.7773s per loop
+elapsed: 09m13s | iter 000230/001133 | nll loss: 7.3631 | 3.2952s per loop
+elapsed: 09m38s | iter 000240/001133 | nll loss: 7.5627 | 2.4807s per loop
+elapsed: 10m03s | iter 000250/001133 | nll loss: 6.9150 | 2.5311s per loop
+elapsed: 10m27s | iter 000260/001133 | nll loss: 7.4856 | 2.3561s per loop
+elapsed: 10m52s | iter 000270/001133 | nll loss: 7.3022 | 2.5497s per loop
+elapsed: 11m14s | iter 000280/001133 | nll loss: 7.4016 | 2.2255s per loop
+elapsed: 11m34s | iter 000290/001133 | nll loss: 7.4052 | 1.9279s per loop
+elapsed: 11m53s | iter 000300/001133 | nll loss: 7.4356 | 1.9668s per loop
+elapsed: 12m16s | iter 000310/001133 | nll loss: 7.4164 | 2.2828s per loop
+elapsed: 12m33s | iter 000320/001133 | nll loss: 7.7632 | 1.6904s per loop
+elapsed: 12m52s | iter 000330/001133 | nll loss: 7.3774 | 1.9173s per loop
+elapsed: 13m18s | iter 000340/001133 | nll loss: 7.6543 | 2.5792s per loop
+elapsed: 13m39s | iter 000350/001133 | nll loss: 7.2051 | 2.1006s per loop
+elapsed: 14m05s | iter 000360/001133 | nll loss: 7.3838 | 2.6460s per loop
+elapsed: 14m27s | iter 000370/001133 | nll loss: 7.5165 | 2.1168s per loop
+elapsed: 14m45s | iter 000380/001133 | nll loss: 7.3670 | 1.7921s per loop
+elapsed: 15m07s | iter 000390/001133 | nll loss: 7.3826 | 2.1968s per loop

@@ -1,11 +1,8 @@
 # files for me
 *.log
 *.ckpt
-*.out
 models/
-logs/
 wordvectors/
-!logs/word_alltrain_resnext101_simple.out
 
 
 # Byte-compiled / optimized / DLL files
