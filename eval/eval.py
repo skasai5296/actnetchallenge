@@ -130,14 +130,16 @@ if __name__ == '__main__':
     before = time.time()
 
     if args.json_path is not None:
+        print("reading from a previously made json file at {}".format(args.json_path), flush=True)
         with open(args.json_path, "r") as f:
             submission = json.load(f)
             obj = submission["results"]
     else:
+        print("making json file from scratch", flush=True)
         submission = {"version": "VERSION 1.3", "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
         obj = {}
 
-    max_loop = 20
+    max_loop = 1
 
     for loop in range(max_loop):
         for it, data in enumerate(dloader):
