@@ -39,6 +39,12 @@ sleep 10m
 
 python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 16 --feature_size 2048  \
 --langmethod Transformer --embedding_size 512 --lstm_memory 512 --modelname resnext --modeldepth 101 --resnet_shortcut A --n_cpu 8 \
+--weight_decay 0.1 --clip_len 64 --pretrain_path ../models/save_105.pth --start_from_ep 0 > ../logs/honban_bs8_wd0.1_lr1e-4.out
+
+sleep 10m
+
+python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 16 --feature_size 2048  \
+--langmethod Transformer --embedding_size 512 --lstm_memory 512 --modelname resnext --modeldepth 101 --resnet_shortcut A --n_cpu 8 \
 --weight_decay 0.1 --clip_len 64 --pretrain_path ../models/save_105.pth --start_from_ep 0 > ../logs/word_alltrain_resnext101_simple.out
 
 # python train.py --max_epochs 1000 --vocabpath vocab_pad.json --lstm_pretrain_ep 0 --max_seqlen 30 --lr 1e-4 --bs 8 --feature_size 2048  \

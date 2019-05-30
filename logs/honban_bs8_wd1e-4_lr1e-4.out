@@ -10,3 +10,7 @@ start training
 duration of clip (39) does not match specified size
 stacking failed
 elapsed: 26s | iter 000010/001133 | nll loss: 9.5999 | 2.6949s per loop
+elapsed: 45s | iter 000020/001133 | nll loss: 9.1624 | 1.9006s per loop
+no key 'segments', id=D7aa0iuPlKc
+elapsed: 01m09s | iter 000030/001133 | nll loss: 8.7228 | 2.3676s per loop
+no key 'segments', id=JkxO6IhuhOs
