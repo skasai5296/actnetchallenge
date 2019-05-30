@@ -4,8 +4,12 @@ sys.path.append(os.pardir)
 import json
 
 
-with open(os.path.join(".json"), "r") as f:
-    meta = json.load(f)
+temppath = "template.json"
+if os.path.exists(temppath):
+    with open(os.path.join(".json"), "r") as f:
+        meta = json.load(f)
+else:
+
 
 with open(os.path.join("/ssd2/dsets/activitynet_captions", "videometa_test.json")) as f:
     meta = json.load(f)
