@@ -116,3 +116,133 @@ elapsed: 38m51s | iter 001060/001133 | nll loss: 7.3355 | 2.7701s per loop
 elapsed: 39m14s | iter 001070/001133 | nll loss: 7.2955 | 2.3049s per loop
 elapsed: 39m36s | iter 001080/001133 | nll loss: 7.3440 | 2.2537s per loop
 elapsed: 39m56s | iter 001090/001133 | nll loss: 7.3498 | 1.9940s per loop
+elapsed: 40m23s | iter 001100/001133 | nll loss: 7.0189 | 2.6897s per loop
+elapsed: 40m46s | iter 001110/001133 | nll loss: 7.3990 | 2.3257s per loop
+elapsed: 41m07s | iter 001120/001133 | nll loss: 7.5515 | 2.0562s per loop
+elapsed: 41m17s | iter 001130/001133 | nll loss: 7.4415 | 0.9470s per loop
+duration of clip (18) does not match specified size
+duration of clip (55) does not match specified size
+no key 'segments'
+no key 'segments'
+duration of clip (63) does not match specified size
+duration of clip (31) does not match specified size
+duration of clip (9) does not match specified size
+duration of clip (44) does not match specified size
+stacking failed
+duration of clip (52) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (43) does not match specified size
+duration of clip (38) does not match specified size
+duration of clip (35) does not match specified size
+duration of clip (44) does not match specified size
+duration of clip (25) does not match specified size
+stacking failed
+duration of clip (57) does not match specified size
+duration of clip (6) does not match specified size
+duration of clip (11) does not match specified size
+duration of clip (15) does not match specified size
+no key 'segments'
+duration of clip (41) does not match specified size
+duration of clip (25) does not match specified size
+duration of clip (62) does not match specified size
+no key 'segments'
+duration of clip (54) does not match specified size
+duration of clip (25) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (1) does not match specified size
+duration of clip (59) does not match specified size
+duration of clip (58) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (31) does not match specified size
+duration of clip (48) does not match specified size
+duration of clip (59) does not match specified size
+no key 'segments'
+duration of clip (20) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (14) does not match specified size
+duration of clip (54) does not match specified size
+duration of clip (47) does not match specified size
+duration of clip (36) does not match specified size
+duration of clip (33) does not match specified size
+no key 'segments'
+duration of clip (21) does not match specified size
+duration of clip (16) does not match specified size
+duration of clip (61) does not match specified size
+duration of clip (44) does not match specified size
+duration of clip (24) does not match specified size
+duration of clip (46) does not match specified size
+duration of clip (40) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (53) does not match specified size
+no key 'segments'
+duration of clip (52) does not match specified size
+duration of clip (50) does not match specified size
+no key 'segments'
+duration of clip (9) does not match specified size
+duration of clip (44) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (28) does not match specified size
+stacking failed
+no key 'segments'
+duration of clip (47) does not match specified size
+duration of clip (5) does not match specified size
+duration of clip (38) does not match specified size
+duration of clip (60) does not match specified size
+duration of clip (35) does not match specified size
+duration of clip (60) does not match specified size
+duration of clip (27) does not match specified size
+duration of clip (32) does not match specified size
+no key 'segments'
+duration of clip (50) does not match specified size
+duration of clip (43) does not match specified size
+duration of clip (22) does not match specified size
+no key 'segments'
+duration of clip (52) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (39) does not match specified size
+duration of clip (52) does not match specified size
+duration of clip (27) does not match specified size
+duration of clip (62) does not match specified size
+duration of clip (7) does not match specified size
+duration of clip (40) does not match specified size
+duration of clip (25) does not match specified size
+duration of clip (20) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (14) does not match specified size
+stacking failed
+duration of clip (62) does not match specified size
+duration of clip (31) does not match specified size
+duration of clip (58) does not match specified size
+duration of clip (39) does not match specified size
+duration of clip (12) does not match specified size
+duration of clip (49) does not match specified size
+duration of clip (42) does not match specified size
+duration of clip (16) does not match specified size
+duration of clip (55) does not match specified size
+duration of clip (9) does not match specified size
+duration of clip (35) does not match specified size
+duration of clip (27) does not match specified size
+duration of clip (53) does not match specified size
+duration of clip (55) does not match specified size
+duration of clip (40) does not match specified size
+duration of clip (57) does not match specified size
+duration of clip (43) does not match specified size
+duration of clip (61) does not match specified size
+duration of clip (61) does not match specified size
+duration of clip (36) does not match specified size
+duration of clip (36) does not match specified size
+duration of clip (18) does not match specified size
+duration of clip (33) does not match specified size
+duration of clip (12) does not match specified size
+duration of clip (50) does not match specified size
+elapsed: 41m19s, epoch 0001/1000 done, loss: 7.339082
+sample sentences:
+<BOS>
+the the the the the the the a
+<BOS> the <BOS> the the a
+the <BOS> <BOS> the <BOS>
+<BOS> the the the the the the the the
+<BOS> <BOS> the the <BOS> the <BOS> the the <BOS> the
+<BOS> the <BOS>
+<BOS> <BOS> <BOS>
