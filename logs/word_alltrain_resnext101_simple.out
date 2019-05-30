@@ -9,3 +9,9 @@ done with decoder pretraining
 start training
 elapsed: 26s | iter 000010/001133 | nll loss: 9.4782 | 2.6096s per loop
 elapsed: 33s | iter 000020/001133 | nll loss: 9.6333 | 0.7689s per loop
+elapsed: 43s | iter 000030/001133 | nll loss: 9.5262 | 0.9659s per loop
+elapsed: 52s | iter 000040/001133 | nll loss: 9.4595 | 0.8931s per loop
+elapsed: 01m02s | iter 000050/001133 | nll loss: 9.3272 | 1.0440s per loop
+elapsed: 01m12s | iter 000060/001133 | nll loss: 9.4109 | 0.9336s per loop
+elapsed: 01m24s | iter 000070/001133 | nll loss: 9.2761 | 1.1986s per loop
+elapsed: 01m35s | iter 000080/001133 | nll loss: 9.1373 | 1.1689s per loop

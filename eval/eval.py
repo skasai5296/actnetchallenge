@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     obj = {}
     
-    max_loop = 1
+    max_loop = 100
 
     for loop in range(max_loop):
         for it, data in enumerate(dloader):
