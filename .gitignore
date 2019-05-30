@@ -1,9 +1,11 @@
 # files for me
 *.log
 *.ckpt
+#*.out
+#*.json
 models/
 wordvectors/
-
+#logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
