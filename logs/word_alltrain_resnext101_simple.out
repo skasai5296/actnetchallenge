@@ -7,19 +7,9 @@ using 4 gpus...
 start decoder pretraining, doing for 0 epochs
 done with decoder pretraining
 start training
-duration of clip (47) does not match specified size
-duration of clip (52) does not match specified size
-[False]
-[False]
-[False]
-[False]
-[False]
-[False]
-[False]
-[ True]
-Traceback (most recent call last):
-  File "train.py", line 242, in <module>
-    caption = caption_gen.sample(pad_feature, src_pos, captions, tgt_pos, args.max_seqlen)
-  File "/home/seito/anaconda3/envs/anetchallenge/lib/python3.6/site-packages/torch/nn/modules/module.py", line 535, in __getattr__
-    type(self).__name__, name))
-AttributeError: 'DataParallel' object has no attribute 'sample'
+duration of clip (24) does not match specified size
+duration of clip (2) does not match specified size
+duration of clip (9) does not match specified size
+duration of clip (62) does not match specified size
+duration of clip (45) does not match specified size
+elapsed: 26s | iter 000010/001133 | nll loss: 9.5649 | 2.6960s per loop

@@ -236,12 +236,7 @@ if __name__ == '__main__':
                 # positional encodings
                 src_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
-                sample = np.random.binomial(n=1, p=0.2, size=1) == 1
-                print(sample)
-                if sample:
-                    caption = caption_gen.sample(pad_feature, src_pos, captions, tgt_pos, args.max_seqlen)
-                else:
-                    caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
+                caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
             elif args.langmethod == 'LSTM':
                 caption, length = caption_gen(feature, captions, lengths)
                 # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
