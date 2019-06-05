@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument('--model_ep', type=int, default=100)
     parser.add_argument('--lstm_pretrain_ep', type=int, default=None)
     parser.add_argument('--log_every', type=int, default=10)
-    parser.add_argument('--lstm_stacks', type=int, default=1)
+    parser.add_argument('--lstm_stacks', type=int, default=3)
     parser.add_argument('--num_layers', type=int, default=18)
     parser.add_argument('--imsize', type=int, default=224)
     parser.add_argument('--clip_len', type=int, default=16)

@@ -185,13 +185,14 @@ if __name__ == '__main__':
                         print("id: {} {} {}".format(id, reg, cap), flush=True)
 
                 elif args.langmethod == 'LSTM':
-                    caption, length = caption_gen(feature, captions, lengths)
+                    """
                     # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
                     centered = []
                     for gpu in range(n_gpu):
                         centered.extend([ten[gpu].item() for ten in length])
-
-                    caption = caption_gen.decode(feature, captions)
+                    """
+                    caption = caption_gen.decode(feature)
+                    print(caption.size())
                     for c, id, reg in zip(caption, ids, regs):
                         cap = vocab.return_sentence(c.unsqueeze(0))[0]
                         if "v_" + id not in obj.keys():

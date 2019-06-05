@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch.nn.utils.rnn import pack_padded_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.optim as optim
 
 sys.path.append(os.pardir)
@@ -238,12 +238,15 @@ if __name__ == '__main__':
                 tgt_pos = torch.arange(args.max_seqlen).repeat(args.bs, 1).to(device) + 1
                 caption = caption_gen(pad_feature, src_pos, captions, tgt_pos)
             elif args.langmethod == 'LSTM':
-                caption, length = caption_gen(feature, captions, lengths)
+                # feature : (bs x C' x 1 x 1 x 1)
+                feature = feature.squeeze(-1).squeeze(-1).squeeze(-1)
+                caption = caption_gen(feature, captions, lengths)
+                """
                 # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
                 centered = []
                 for gpu in range(n_gpu):
                     centered.extend([ten[gpu].item() for ten in length])
-                caption = pack_padded_sequence(caption, centered, batch_first=True)[0]
+                """
 
             # backpropagate loss and store negative log likelihood
             nll = criterion(caption, targets)
@@ -260,9 +263,11 @@ if __name__ == '__main__':
 
         # scheduler.step(nll.cpu().item())
         print("{}, epoch {:04d}/{:04d} done, loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll.cpu().item()))
-        print("sample sentences:")
-        for sentence in vocab.return_sentence(caption.argmax(dim=-1)):
-            print(sentence, flush=True)
+        if args.langmethod == 'Transformer':
+            print("sample sentences:")
+            for sentence in vocab.return_sentence(caption.argmax(dim=-1)):
+                print(sentence, flush=True)
+
 
         # save models
         enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
