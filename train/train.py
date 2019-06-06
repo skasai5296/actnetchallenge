@@ -34,7 +34,6 @@ if __name__ == '__main__':
 
     # gpus
     device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
-    torch.backends.cudnn.benchmark=True
 
     # load vocabulary
     vocab = Vocabulary(token_level=args.token_level)
@@ -63,7 +62,7 @@ if __name__ == '__main__':
         scale = 16
         inter_time = int(args.clip_len/scale)
         video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
-        video_encoder.fc = Identity()
+    video_encoder.fc = Identity()
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
     elif args.langmethod == 'Transformer':
@@ -134,10 +133,12 @@ if __name__ == '__main__':
 
     assert args.max_epochs > offset, "already at offset epoch number, aborting training"
 
+    # begin training
+    begin = time.time()
+
     # decoder pretraining loop
     if args.lstm_pretrain_ep > 0:
         print("start decoder pretraining, doing for {} epochs".format(args.lstm_pretrain_ep))
-        begin = time.time()
         before = time.time()
         for ep in range(args.lstm_pretrain_ep):
             for it, data in enumerate(trainloader):

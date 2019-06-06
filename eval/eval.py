@@ -61,8 +61,7 @@ if __name__ == '__main__':
         scale = 16
         inter_time = int(args.clip_len/scale)
         video_encoder.avgpool = nn.AdaptiveAvgPool3d((inter_time, 1, 1))
-        video_encoder.fc = Identity()
-
+    video_encoder.fc = Identity()
     if args.langmethod == 'LSTM':
         caption_gen = RNNCaptioning(method=args.langmethod, emb_size=args.embedding_size, ft_size=args.feature_size,
                 lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
