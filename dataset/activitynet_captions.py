@@ -227,7 +227,7 @@ class ActivityNetCaptions(Dataset):
         self.mode = mode
 
     def get_clip_from_dur(self, id, dur):
-        startframe, endframe = *dur
+        startframe, endframe = dur[0], dur[1]
         frame_indices = range(startframe, endframe)
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
