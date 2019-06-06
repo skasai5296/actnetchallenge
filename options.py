@@ -35,7 +35,7 @@ def parse_args():
     # training config
     parser.add_argument('--start_from_ep', type=int, default=0)
     parser.add_argument('--model_ep', type=int, default=100)
-    parser.add_argument('--lstm_pretrain_ep', type=int, default=None)
+    parser.add_argument('--lstm_pretrain_ep', type=int, default=-1)
     parser.add_argument('--log_every', type=int, default=10)
     parser.add_argument('--token_level', action='store_true')
     parser.add_argument('--n_cpu', type=int, default=8)

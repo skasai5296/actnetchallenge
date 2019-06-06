@@ -135,68 +135,69 @@ if __name__ == '__main__':
     assert args.max_epochs > offset, "already at offset epoch number, aborting training"
 
     # decoder pretraining loop
-    print("start decoder pretraining, doing for {} epochs".format(args.lstm_pretrain_ep))
-    begin = time.time()
-    before = time.time()
-    for ep in range(args.lstm_pretrain_ep):
-        for it, data in enumerate(trainloader):
+    if args.lstm_pretrain_ep > 0:
+        print("start decoder pretraining, doing for {} epochs".format(args.lstm_pretrain_ep))
+        begin = time.time()
+        before = time.time()
+        for ep in range(args.lstm_pretrain_ep):
+            for it, data in enumerate(trainloader):
 
-            _, captions, lengths, _, _ = data
+                _, captions, lengths, _, _ = data
 
-            optimizer.zero_grad()
+                optimizer.zero_grad()
 
-            # move to device
-            captions = captions.to(device)
-            if args.langmethod == 'LSTM':
-                lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
-                targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+                # move to device
+                captions = captions.to(device)
+                if args.langmethod == 'LSTM':
+                    lengths = torch.tensor([min(args.max_seqlen, length) for length in lengths], dtype=torch.long, device=device)
+                    targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+                else:
+                    targets = captions
+
+                # flow through model, use a 0 vector for video features
+                if args.langmethod == 'Transformer':
+                    feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
+                    pos = torch.arange(args.max_seqlen).repeat(args.batchsize, 1).to(device) + 1
+                    for b, length in enumerate(lengths):
+                        pos[b, length:] = 0
+                    caption = caption_gen(feature, captions, pos, targets, pos)
+                else:
+                    feature = torch.zeros(args.bs, args.feature_size).to(device)
+                    caption, length = caption_gen(feature, captions, lengths)
+
+                # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
+                centered = []
+                for gpu in range(n_gpu):
+                    centered.extend([ten[gpu].item() for ten in length])
+                packedcaption = pack_padded_sequence(caption, centered, batch_first=True)[0]
+
+                # backpropagate loss and store negative log likelihood
+                nll = criterion(packedcaption, targets)
+                nll.backward()
+                optimizer.step()
+
+                # log losses
+                if it % args.log_every == (args.log_every-1):
+                    after = time.time()
+                    print("{}, iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
+                    before = time.time()
+
+            print("{}, epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
+
+            # save models
+            dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+            dec_filename = "ep{:04d}.ckpt".format(ep+1)
+            dec_save_path = os.path.join(dec_save_dir, dec_filename)
+            if not os.path.exists(dec_save_dir):
+                os.makedirs(dec_save_dir)
+
+            if n_gpu > 1 and args.dataparallel:
+                torch.save(caption_gen.module.state_dict(), dec_save_path)
             else:
-                targets = captions
-
-            # flow through model, use a 0 vector for video features
-            if args.langmethod == 'Transformer':
-                feature = torch.zeros(args.bs, args.max_seqlen, args.feature_size).to(device)
-                pos = torch.arange(args.max_seqlen).repeat(args.batchsize, 1).to(device) + 1
-                for b, length in enumerate(lengths):
-                    pos[b, length:] = 0
-                caption = caption_gen(feature, captions, pos, targets, pos)
-            else:
-                feature = torch.zeros(args.bs, args.feature_size).to(device)
-                caption, length = caption_gen(feature, captions, lengths)
-
-            # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
-            centered = []
-            for gpu in range(n_gpu):
-                centered.extend([ten[gpu].item() for ten in length])
-            packedcaption = pack_padded_sequence(caption, centered, batch_first=True)[0]
-
-            # backpropagate loss and store negative log likelihood
-            nll = criterion(packedcaption, targets)
-            nll.backward()
-            optimizer.step()
-
-            # log losses
-            if it % args.log_every == (args.log_every-1):
-                after = time.time()
-                print("{}, iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, nll.cpu().item(), (after-before)/args.log_every), flush=True)
-                before = time.time()
-
-        print("{}, epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
-
-        # save models
-        dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
-        dec_filename = "ep{:04d}.ckpt".format(ep+1)
-        dec_save_path = os.path.join(dec_save_dir, dec_filename)
-        if not os.path.exists(dec_save_dir):
-            os.makedirs(dec_save_dir)
-
-        if n_gpu > 1 and args.dataparallel:
-            torch.save(caption_gen.module.state_dict(), dec_save_path)
-        else:
-            torch.save(caption_gen.state_dict(), dec_save_path)
-        print("saved pretrained decoder model to {}".format(dec_save_path))
-        # scheduler.step(nll.cpu().item())
-    print("done with decoder pretraining")
+                torch.save(caption_gen.state_dict(), dec_save_path)
+            print("saved pretrained decoder model to {}".format(dec_save_path))
+            # scheduler.step(nll.cpu().item())
+        print("done with decoder pretraining")
 
     # joint training loop
     print("start training")

@@ -73,7 +73,7 @@ if __name__ == '__main__':
     models = [video_encoder, caption_gen]
 
     # apply pretrained model
-    if args.lstm_pretrain_ep is not None:
+    if args.lstm_pretrain_ep > 0:
         dec_model_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(args.lstm_pretrain_ep)
         dec_model_path = os.path.join(dec_model_dir, dec_filename)
