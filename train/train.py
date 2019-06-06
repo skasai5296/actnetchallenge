@@ -186,7 +186,7 @@ if __name__ == '__main__':
             print("{}, epoch {:04d}/{:04d} done (pretrain), loss: {:.06f}".format(sec2str(time.time()-begin), ep+1, args.lstm_pretrain_ep, nll.cpu().item()), flush=True)
 
             # save models
-            dec_save_dir = os.path.join(args.model_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+            dec_save_dir = os.path.join(args.model_save_path, "{}_pre".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
             dec_filename = "ep{:04d}.ckpt".format(ep+1)
             dec_save_path = os.path.join(dec_save_dir, dec_filename)
             if not os.path.exists(dec_save_dir):
@@ -272,10 +272,10 @@ if __name__ == '__main__':
 
 
         # save models
-        enc_save_dir = os.path.join(args.model_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        enc_save_dir = os.path.join(args.model_save_path, "{}_{}".format(args.modelname, args.modeldepth), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         enc_filename = "ep{:04d}.ckpt".format(ep+1)
         enc_save_path = os.path.join(enc_save_dir, enc_filename)
-        dec_save_dir = os.path.join(args.model_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
+        dec_save_dir = os.path.join(args.model_save_path, "{}_fine".format(args.langmethod), "b{:03d}_s{:03d}_l{:03d}".format(args.bs, args.imsize, args.clip_len))
         dec_filename = "ep{:04d}.ckpt".format(ep+1)
         dec_save_path = os.path.join(dec_save_dir, dec_filename)
         if not os.path.exists(enc_save_dir):
