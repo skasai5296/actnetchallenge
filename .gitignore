@@ -6,6 +6,7 @@
 models/
 wordvectors/
 logs/
+eval/PGM_proposals/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
