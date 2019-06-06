@@ -30,17 +30,21 @@ def get_frmnum(meta, id):
 root_path = "../../../Downloads/PGM_proposals"
 meta = "../../../Downloads/videometa_test.json"
 dirs = os.listdir(root_path)
-data = {}
-for i, csv in enumerate(dirs):
+obj = {}
+for i, csv in enumerate(dirs, 10):
+    data = []
     path = os.path.join(root_path, csv)
     id = csv[2:-4]
     id, regs = get_prop(path, meta, id)
-    if id is not None:
-        data[id] = regs
     if i % 100 == 99:
         print("{} done".format(i+1), flush=True)
+    if id is None:
+        continue
+    for reg in regs:
+        data.append({"timestamp" : reg})
+    obj[id] = data
 
-submission = {"version": "VERSION 1.3", "results": data, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
+submission = {"version": "VERSION 1.3", "results": obj, "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
 
 with open("proposals_test.json", "w+") as f:
     json.dump(submission, f)

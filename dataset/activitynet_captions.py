@@ -226,6 +226,23 @@ class ActivityNetCaptions(Dataset):
         self.sample_duration = sample_duration
         self.mode = mode
 
+    def get_clip_from_dur(self, id, dur):
+        startframe, endframe = *dur
+        frame_indices = range(startframe, endframe)
+        if self.temporal_transform is not None:
+            frame_indices = self.temporal_transform(frame_indices)
+
+        path = os.path.join(self.framepath, id)
+        clip = self.loader(path, frame_indices)
+        if self.spatial_transform is not None:
+            self.spatial_transform.randomize_parameters()
+            clip = [self.spatial_transform(img) for img in clip]
+        try:
+            clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+        except:
+            return None
+        return clip
+
     def __getitem__(self, index):
         """
         Args:

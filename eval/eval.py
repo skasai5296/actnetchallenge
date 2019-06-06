@@ -139,8 +139,49 @@ if __name__ == '__main__':
         submission = {"version": "VERSION 1.3", "external_data": {"used": True, "details": "Excluding the last fc layer, the video encoding model (3D-ResneXt-101) is pre-trained on the Kinetics-400 training set"}}
         obj = {}
 
-    max_loop = 1
+    for iter, id, answers in enumerate(obj.items()):
+        regs = [item["timestamp"] for item in answers]
+        captions = []
+        for i, reg in enumerate(regs):
+            clip = dset.get_clip_from_dur(id, reg)
+            if clip is None:
+                continue
+            # move to device, batch size is 1 (fixed)
+            clip = clip.unsqueeze(0).to(device)
+            with torch.no_grad():
+                feature = video_encoder(clip)
 
+                if args.langmethod == 'Transformer':
+                    feature = feature.squeeze(-1).squeeze(-1).transpose(1, 2)
+                    if args.max_seqlen <= inter_time:
+                        pad_feature = feature[:, :args.max_seqlen, :]
+                    else:
+                        pad_feature = torch.zeros(args.batch_size, args.max_seqlen, args.feature_size).to(device)
+                        pad_feature[:, :inter_time, :] = feature
+
+                    # positional encodings
+                    src_pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
+                    tgt_pos = torch.arange(args.max_seqlen).repeat(args.batch_size, 1).to(device) + 1
+                    caption = caption_gen.sample(pad_feature, src_pos, tgt_pos, args.max_seqlen)
+
+                elif args.langmethod == 'LSTM':
+                    """
+                    # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
+                    centered = []
+                    for gpu in range(n_gpu):
+                        centered.extend([ten[gpu].item() for ten in length])
+                    """
+                    caption = caption_gen.decode(feature)
+
+                cap = vocab.return_sentence(caption)[0]
+                obj[id][num]["sentence"] = cap
+
+        print("-"*100)
+        print("id: {} done, {}".format(id, iter))
+        print("-"*100)
+
+    """
+    max_loop = 1
     for loop in range(max_loop):
         for it, data in enumerate(dloader):
 
@@ -185,12 +226,6 @@ if __name__ == '__main__':
                         print("id: {} {} {}".format(id, reg, cap), flush=True)
 
                 elif args.langmethod == 'LSTM':
-                    """
-                    # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
-                    centered = []
-                    for gpu in range(n_gpu):
-                        centered.extend([ten[gpu].item() for ten in length])
-                    """
                     caption = caption_gen.decode(feature)
                     print(caption.size())
                     for c, id, reg in zip(caption, ids, regs):
@@ -211,6 +246,7 @@ if __name__ == '__main__':
         print("-"*100)
         print("{}/{} loops done".format(loop+1, max_loop))
         print("-"*100)
+    """
 
     submission["results"] = obj
 
