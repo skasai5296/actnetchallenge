@@ -5,7 +5,8 @@ def parse_args():
 
     # configurations of dataset (paths)
     parser.add_argument('--root_path', type=str, default='/ssd1/dsets/activitynet_captions')
-    parser.add_argument('--model_path', type=str, default='../models')
+    parser.add_argument('--model_path', type=str, default='../models', help='Path to read models from when training / testing')
+    parser.add_argument('--model_save_path', type=str, default='../models', help='Path to save models to when training')
     parser.add_argument('--meta_path', type=str, default='videometa_train.json')
     parser.add_argument('--framepath', type=str, default='frames')
     parser.add_argument('--annpath', type=str, default='train.json')
