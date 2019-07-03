@@ -1,4 +1,3 @@
-import sys, os
 import math
 from functools import partial
 
@@ -7,8 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .resnet import conv1x1x1, Bottleneck, ResNet
-sys.path.append(os.pardir)
-from utils.utils import partialclass
+from utils import partialclass
 
 
 def get_inplanes():
@@ -43,22 +41,18 @@ class ResNeXt(ResNet):
                  block,
                  layers,
                  block_inplanes,
-                 clip_len,
-                 imsize,
                  conv1_t_size=7,
                  conv1_t_stride=1,
                  no_max_pool=False,
                  shortcut_type='B',
-                 cardinality=32,
-                 n_classes=739):
+                 cardinality=32):
         block = partialclass(block, cardinality=cardinality)
-        super().__init__(block, layers, block_inplanes=block_inplanes, shortcut_type=shortcut_type, sample_duration=clip_len, sample_size=imsize,
-                         num_classes=n_classes)
-
-        self.fc = nn.Linear(cardinality * 32 * block.expansion, n_classes)
+        super().__init__(block, layers, block_inplanes, conv1_t_size,
+                         conv1_t_stride, no_max_pool, shortcut_type, n_classes)
 
 
-def generate_resnext(model_depth, **kwargs):
+
+def generate_model(model_depth, **kwargs):
     assert model_depth in [50, 101, 152, 200]
 
     if model_depth == 50:

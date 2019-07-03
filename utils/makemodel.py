@@ -1,123 +1,129 @@
+import sys, os
+sys.path.append(os.pardir)
+
 import torch
-from torch import nn
+import torch.nn as nn
 
 from imagemodels import resnet, pre_act_resnet, wide_resnet, resnext, densenet
+from utils.utils import weight_init
 
-
-def generate_model(opt):
-    assert opt.modelname in [
+def generate_3dcnn(opt):
+    assert opt.cnn_name in [
         'resnet', 'preresnet', 'wideresnet', 'resnext', 'densenet'
     ]
-    opt.arch = "{}-{}".format(opt.modelname, opt.modeldepth)
 
-    if opt.modelname == 'resnet':
-        assert opt.modeldepth in [10, 18, 34, 50, 101, 152, 200]
-
-        from imagemodels.resnet import get_fine_tuning_parameters
-
-        model = getattr(resnet, opt.modelname + str(opt.modeldepth))(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-    elif opt.modelname == 'wideresnet':
-        assert opt.modeldepth in [50]
-
-        from imagemodels.wide_resnet import get_fine_tuning_parameters
-
-        if opt.modeldepth == 50:
-            model = getattr(wide_resnet, "resnet" + str(opt.modeldepth))(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                k=opt.wide_resnet_k,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-    elif opt.modelname == 'resnext':
-        assert opt.modeldepth in [50, 101, 152]
-
-        from imagemodels.resnext import generate_resnext
-
-        model = generate_resnext(opt.modeldepth, clip_len=opt.clip_len, imsize=opt.imsize, n_classes=opt.n_classes)
-
-    elif opt.modelname == 'preresnet':
-        assert opt.modeldepth in [18, 34, 50, 101, 152, 200]
-
-        from imagemodels.pre_act_resnet import get_fine_tuning_parameters
-        model = getattr(pre_act_resnet, "resnet" + str(opt.modeldepth))(
-                num_classes=opt.n_classes,
-                shortcut_type=opt.resnet_shortcut,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
-
-    elif opt.modelname == 'densenet':
-        assert opt.modeldepth in [121, 169, 201, 264]
-
-        from imagemodels.densenet import get_fine_tuning_parameters
-        model = getattr(densenet, opt.modelname + str(opt.modeldepth))(
-                num_classes=opt.n_classes,
-                sample_size=opt.sample_size,
-                sample_duration=opt.sample_duration)
+    if opt.cnn_name == 'resnet':
+        model = resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'wideresnet':
+        model = wide_resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            k=opt.wide_resnet_k,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'resnext':
+        model = resnext.generate_model(
+            model_depth=opt.cnn_depth,
+            cardinality=opt.resnext_cardinality,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'preresnet':
+        model = pre_act_resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'densenet':
+        model = densenet.generate_model(
+            model_depth=opt.cnn_depth,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
 
     if opt.cuda:
-        model = model.cuda()
+        model = model.to(torch.device('cuda'))
 
-        if opt.pretrain_path:
+    if not opt.pretrain_path:
+        model.apply(weight_init)
+        print('no path specified, starting 3DCNN model from scratch')
+        return model, model.parameters()
 
-            state_dict = torch.load(opt.pretrain_path)
-            # create new OrderedDict that does not contain `module.`
-            from collections import OrderedDict
-            new_state_dict = OrderedDict()
-            for k, v in state_dict['state_dict'].items():
-                if k.startswith('module'):
-                    name = k[7:] # remove `module.`
-                else:
-                    name = k
-                new_state_dict[name] = v
+    print('loading pretrained 3DCNN model from {}'.format(opt.pretrain_path))
+    pretrain = torch.load(opt.pretrain_path)
+    assert opt.arch == pretrain['arch']
 
-            # load params
-            assert opt.arch == state_dict['arch']
+    model.load_state_dict(pretrain['state_dict'])
 
-            model.load_state_dict(new_state_dict)
+    parameters = get_fine_tuning_parameters(model, opt.ft_begin_module)
 
-            if opt.modelname == 'densenet':
-                model.classifier = nn.Linear(
-                    model.classifier.in_features, opt.n_finetune_classes)
-                model.classifier = model.module.classifier.cuda()
-            else:
-                model.fc = nn.Linear(model.fc.in_features,
-                                            opt.n_finetune_classes)
-                model.fc = model.fc.cuda()
+    return model, parameters
 
-            print("loaded pretrain models from {}".format(opt.pretrain_path))
-            #parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
-            return model
-    else:
-        if opt.pretrain_path:
-            state_dict = torch.load(opt.pretrain_path)
-            # create new OrderedDict that does not contain `module.`
-            from collections import OrderedDict
-            new_state_dict = OrderedDict()
-            for k, v in state_dict['state_dict'].items():
-                name = k[7:] # remove `module.`
-                new_state_dict[name] = v
+def generate_lstm(opt):
+    assert opt.rnn_name in [
+        'LSTM', 'GRU', 'RNN'
+    ]
 
-            # load params
-            assert opt.arch == state_dict['arch']
+    model = getattr(nn, opt.rnn_name)(input_size=, hidden_size=, num_layers, batch_first=True, dropout=opt.rnn_dropout, bidirectional=False)
+    if opt.rnn_name == 'res:
+        model = resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'wideresnet':
+        model = wide_resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            k=opt.wide_resnet_k,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'resnext':
+        model = resnext.generate_model(
+            model_depth=opt.cnn_depth,
+            cardinality=opt.resnext_cardinality,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'preresnet':
+        model = pre_act_resnet.generate_model(
+            model_depth=opt.cnn_depth,
+            shortcut_type=opt.resnet_shortcut,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
+    elif opt.cnn_name == 'densenet':
+        model = densenet.generate_model(
+            model_depth=opt.cnn_depth,
+            conv1_t_size=opt.conv1_t_size,
+            conv1_t_stride=opt.conv1_t_stride,
+            no_max_pool=opt.no_max_pool)
 
-            print('loading pretrained model {}'.format(opt.pretrain_path))
-            pretrain = torch.load(opt.pretrain_path)
-            assert opt.arch == pretrain['arch']
+    if opt.cuda:
+        model = model.to(torch.device('cuda'))
 
-            model.load_state_dict(pretrain['state_dict'])
+    if not opt.pretrain_path:
+        model.apply(weight_init)
+        print('no path specified, starting 3DCNN model from scratch')
+        return model, model.parameters()
 
-            if opt.modelname == 'densenet':
-                model.classifier = nn.Linear(
-                    model.classifier.in_features, opt.n_finetune_classes)
-            else:
-                model.fc = nn.Linear(model.fc.in_features,
-                                            opt.n_finetune_classes)
+    print('loading pretrained 3DCNN model from {}'.format(opt.pretrain_path))
+    pretrain = torch.load(opt.pretrain_path)
+    assert opt.arch == pretrain['arch']
 
-            #parameters = get_fine_tuning_parameters(model, opt.ft_begin_index)
-            return model
+    model.load_state_dict(pretrain['state_dict'])
 
-    return model, model.parameters()
+    parameters = get_fine_tuning_parameters(model, opt.ft_begin_module)
+
+    return model, parameters

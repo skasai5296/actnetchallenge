@@ -10,7 +10,6 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import torch.nn.init as init
 import torch.nn.functional as F
 
-from langmodels.vocab import tokenize
 
 
 PAD = 0
@@ -18,7 +17,7 @@ PAD = 0
 class Identity(nn.Module):
     def __init__(self):
         super(Identity, self).__init__()
-        
+
     def forward(self, x):
         return x
 
@@ -76,6 +75,8 @@ def get_pretrained_from_txt(path):
             lookup[token] = vec
     return lookup
 
+                nn.init.kaiming_normal_(
+                    m.weight, mode='fan_out', nonlinearity='relu')
 
 def weight_init(m):
     '''
@@ -92,7 +93,7 @@ def weight_init(m):
         if m.bias is not None:
             init.normal_(m.bias.data)
     elif isinstance(m, nn.Conv3d):
-        init.xavier_normal_(m.weight.data)
+        init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
         if m.bias is not None:
             init.normal_(m.bias.data)
     elif isinstance(m, nn.ConvTranspose1d):
@@ -114,8 +115,8 @@ def weight_init(m):
         init.normal_(m.weight.data, mean=1, std=0.02)
         init.constant_(m.bias.data, 0)
     elif isinstance(m, nn.BatchNorm3d):
-        init.normal_(m.weight.data, mean=1, std=0.02)
-        init.constant_(m.bias.data, 0)
+        init.constant_(m.weight, 1)
+        init.constant_(m.bias, 0)
     elif isinstance(m, nn.Linear):
         init.xavier_normal_(m.weight.data)
         if m.bias is not None:

@@ -8,35 +8,13 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-sys.path.append(os.pardir)
-from utils.utils import *
-
-
-# embedding module.
-# (***) -> (***, embedding_size)
-class Embedding(nn.Module):
-    def __init__(self,
-                 vocab_size,
-                 embedding_size=512
-                 ):
-        super(Embedding, self).__init__()
-        self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
-        self.emb = nn.Embedding(self.vocab_size, self.embedding_size)
-
-    def forward(self, x):
-        return self.emb(x)
-
-    # TODO
-    def init_pretrained_weights(self, vocab):
-        pass
+#from utils.utils import *
 
 
 # captioning module.
 # lstm_memory must be same as output dimension of encoder (3DCNN). TCHW must be flattened.
-class RNNCaptioning(nn.Module):
+class LSTMCaptioning(nn.Module):
     def __init__(self,
-                 method='LSTM',
                  ft_size=512,
                  emb_size=512,
                  lstm_memory=512,
@@ -46,7 +24,6 @@ class RNNCaptioning(nn.Module):
                  dropout_p=0.1
                  ):
         super(RNNCaptioning, self).__init__()
-        self.method = method
         self.ft_size = ft_size
         self.emb_size = emb_size
         self.lstm_memory = lstm_memory
@@ -56,9 +33,8 @@ class RNNCaptioning(nn.Module):
 
         self.linear1 = nn.Linear(self.ft_size, self.emb_size)
         self.emb = nn.Embedding(self.vocab_size, self.emb_size)
-        if method == 'LSTM':
-            self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True, dropout=dropout_p)
-            #self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
+        self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True, dropout=dropout_p)
+        #self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
         self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
 
     def init_embedding(self, tensor):

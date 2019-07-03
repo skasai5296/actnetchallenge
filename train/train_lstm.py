@@ -14,24 +14,46 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.optim as optim
 
 sys.path.append(os.pardir)
-from utils.utils import *
-from langmodels.lstm import RNNCaptioning
-from langmodels.bert import Bert
-from langmodels.transformer import Transformer
-from langmodels.vocab import Vocabulary
+from utils.utils import sec2str, collate_fn, count_parameters, weight_init
+from langmodels.lstm import LSTMCaptioning
+from langmodels.vocab import build_vocab, parse
 import imagemodels.resnet as resnet
-from dataset.activitynet_captions import ActivityNetCaptions
+from dataset.activitynet_train import ActivityNetCaptions_Train
 import transforms.spatial_transforms as spt
 import transforms.temporal_transforms as tpt
 
 from options import parse_args
-from utils.makemodel import generate_model
+from utils.makemodel import generate_3dcnn, generate_lstm
+
+def train_lstm(args):
+    # gpus
+    device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
+
+    # load vocabulary
+    annfiles = ["/ssd1/dsets/activitynet_captions/train.json", "/ssd1/dsets/activitynet_captions/val_1.json", "/ssd1/dsets/activitynet_captions/val_2.json"]
+    text_proc = build_vocab(annfiles, args.min_freq, args.max_seqlen)
+    vocab_size = len(text_proc.itos)
+
+    # transforms
+    sp = spt.Compose([spt.CornerCrop(size=args.imsize), spt.ToTensor()])
+    tp = tpt.Compose([tpt.TemporalRandomCrop(args.clip_len), tpt.LoopPadding(args.clip_len)])
+
+    # dataloading
+    train_dset = ActivityNetCaptions_Train(args.root_path, args.framepath, n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
+    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collate_fn, drop_last=True, pin_memory=True)
+    max_it = int(len(train_dset) / args.bs)
+
+    # models
+    video_encoder = generate_model(args)
+    caption_gen = LSTMCaptioning(emb_size=args.embedding_size, ft_size=args.feature_size, lstm_memory=args.lstm_memory, vocab_size=vocab_size, max_seqlen=args.max_seqlen, num_layers=args.lstm_stacks)
+
 
 if __name__ == '__main__':
     args = parse_args()
 
     print(args)
 
+    """
     # gpus
     device = torch.device('cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
 
@@ -50,9 +72,8 @@ if __name__ == '__main__':
     tp = tpt.Compose([tpt.TemporalRandomCrop(args.clip_len), tpt.LoopPadding(args.clip_len)])
 
     # dataloading
-    collatefn = functools.partial(collater, args.max_seqlen)
     train_dset = ActivityNetCaptions(args.root_path, args.meta_path, args.mode, vocab, args.framepath, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collatefn, drop_last=True, pin_memory=True)
+    trainloader = DataLoader(train_dset, batch_size=args.bs, shuffle=True, num_workers=args.n_cpu, collate_fn=collate_fn, drop_last=True, pin_memory=True)
     max_it = int(len(train_dset) / args.bs)
 
     # models
@@ -86,10 +107,8 @@ if __name__ == '__main__':
             print("restarting training from epoch {}".format(offset))
         else:
             offset = 0
-            """
             video_encoder.apply(weight_init)
             caption_gen.apply(weight_init)
-            """
             print("didn't find file, starting encoder, decoder from scratch")
 
 
@@ -243,12 +262,6 @@ if __name__ == '__main__':
                 # feature : (bs x C' x 1 x 1 x 1)
                 feature = feature.squeeze(-1).squeeze(-1).squeeze(-1)
                 caption = caption_gen(feature, captions, lengths)
-                """
-                # lengths returned by caption_gen should be distributed because of dataparallel, so merge.
-                centered = []
-                for gpu in range(n_gpu):
-                    centered.extend([ten[gpu].item() for ten in length])
-                """
 
             # backpropagate loss and store negative log likelihood
             nll = criterion(caption, targets)
@@ -297,6 +310,7 @@ if __name__ == '__main__':
 
 
     print("end training")
+    """
 
 
 

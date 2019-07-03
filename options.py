@@ -13,21 +13,19 @@ def parse_args():
     parser.add_argument('--vocabpath', type=str, default='vocab.json')
 
     # configurations of 3D CNN
-    parser.add_argument('--n_classes', default=739, type=int, help='Number of classes (activitynet: 200, kinetics: 400, ucf101: 101, hmdb51: 51)')
-    parser.add_argument('--n_finetune_classes', default=739, type=int, help='Number of classes for fine-tuning. n_classes is set to the number when pretraining.')
     parser.add_argument('--pretrain_path', default='', type=str, help='Pretrained model (.pth)')
     parser.add_argument('--ft_begin_index', default=0, type=int, help='Begin block index of fine-tuning')
     parser.add_argument('--norm_value', default=1, type=int, help='If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
-    parser.add_argument('--modelname', default='resnet', type=str, help='(resnet | preresnet | wideresnet | resnext | densenet | ')
-    parser.add_argument('--modeldepth', default=18, type=int, help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
+    parser.add_argument('--cnn_name', default='resnet', type=str, help='(resnet | preresnet | wideresnet | resnext | densenet | ')
+    parser.add_argument('--cnn_depth', default=18, type=int, help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
     parser.add_argument('--resnet_shortcut', default='B', type=str, help='Shortcut type of resnet (A | B)')
     parser.add_argument('--wide_resnet_k', default=2, type=int, help='Wide resnet k')
     parser.add_argument('--resnext_cardinality', default=32, type=int, help='ResNeXt cardinality')
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
 
     # configurations of captioning module
-    parser.add_argument('--langmethod', type=str, default='LSTM')
-    parser.add_argument('--lstm_stacks', type=int, default=3)
+    parser.add_argument('--rnn_name', type=str, default='LSTM')
+    parser.add_argument('--rnn_layers', type=int, default=3)
     parser.add_argument('--num_layers', type=int, default=18)
     parser.add_argument('--emb_init', type=str, default='../wordvectors/glove.6B.300d.txt')
 
