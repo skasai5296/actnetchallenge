@@ -16,7 +16,6 @@ def get_actnetcaption_ids(idfile):
     return [id[2:]for id in paths]
 
 
-
 def vid2meta(video_dir, frame_dir, idsdir, save_file, shorter):
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
 

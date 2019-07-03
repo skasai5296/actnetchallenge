@@ -48,25 +48,20 @@ class LabelSmoothingLoss(nn.Module):
 
         return loss
 
-def collater(maxlen, datas, token_level=False):
-    # sort data by caption lengths for packing
-    if datas[0][1] is not None:
-        datas.sort(key=lambda x: x[1].size(0), reverse=True)
-    clips, captions, ids, regs = zip(*datas)
-    batchsize = len(captions)
-    ten = []
-    if datas[0][1] is not None:
-        lengths = torch.tensor([cap.size(0) for cap in captions], dtype=torch.long)
-        padded_captions = torch.zeros(batchsize, maxlen, dtype=torch.long)
-        for i, caption in enumerate(captions):
-            length = min(caption.size(0), maxlen)
-            padded_captions[i, :length] = caption[:length]
-    else:
-        padded_captions = None
-        lengths = None
-    clips = torch.stack(clips)
+def collate_fn(datas):
+    idlist = []
+    durationlist = []
+    sentencelist = []
+    timestamplist = []
+    fpslist = []
+    for data in datas:
+        idlist.append(data['id'])
+        durationlist.append(data['duration'])
+        sentencelist.append(data['sentences'])
+        timestamplist.append(data['timestamps'])
+        fpslist.append(data['fps'])
 
-    return clips, padded_captions, lengths, ids, regs
+    return {'id': idlist, 'duration': durationlist, 'sentences': sentencelist, 'timestamps': timestamplist, 'fps': fpslist}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
