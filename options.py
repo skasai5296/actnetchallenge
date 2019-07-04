@@ -7,14 +7,12 @@ def parse_args():
     parser.add_argument('--root_path', type=str, default='/ssd1/dsets/activitynet_captions')
     parser.add_argument('--model_path', type=str, default='../models', help='Path to read models from when training / testing')
     parser.add_argument('--model_save_path', type=str, default='../models', help='Path to save models to when training')
-    parser.add_argument('--meta_path', type=str, default='videometa_train.json')
     parser.add_argument('--framepath', type=str, default='frames')
     parser.add_argument('--annpath', type=str, default='train.json')
     parser.add_argument('--vocabpath', type=str, default='vocab.json')
 
     # configurations of 3D CNN
-    parser.add_argument('--pretrain_path', default='', type=str, help='Pretrained model (.pth)')
-    parser.add_argument('--ft_begin_index', default=0, type=int, help='Begin block index of fine-tuning')
+    parser.add_argument('--enc_pretrain_path', default='', type=str, help='Pretrained model of feature extracting module (.pth)')
     parser.add_argument('--norm_value', default=1, type=int, help='If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
     parser.add_argument('--cnn_name', default='resnet', type=str, help='(resnet | preresnet | wideresnet | resnext | densenet | ')
     parser.add_argument('--cnn_depth', default=18, type=int, help='Depth of resnet (10 | 18 | 34 | 50 | 101)')
@@ -24,39 +22,35 @@ def parse_args():
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
 
     # configurations of captioning module
+    parser.add_argument('--dec_pretrain_path', default='', type=str, help='Pretrained model of captioning module (.pth)')
     parser.add_argument('--rnn_name', type=str, default='LSTM')
     parser.add_argument('--rnn_layers', type=int, default=3)
-    parser.add_argument('--num_layers', type=int, default=18)
+    parser.add_argument('--max_seqlen', type=int, default=30)
     parser.add_argument('--emb_init', type=str, default='../wordvectors/glove.6B.300d.txt')
 
-    parser.add_argument('--mode', type=str, default='train')
-
     # training config
-    parser.add_argument('--start_from_ep', type=int, default=0)
-    parser.add_argument('--model_ep', type=int, default=100)
+    parser.add_argument('--max_epochs', type=int, default=20)
     parser.add_argument('--lstm_pretrain_ep', type=int, default=-1)
     parser.add_argument('--log_every', type=int, default=10)
     parser.add_argument('--token_level', action='store_true')
     parser.add_argument('--n_cpu', type=int, default=8)
-    parser.add_argument('--cuda', action='store_false')
-    parser.add_argument('--dataparallel', action='store_false')
+    parser.add_argument('--no_cuda', dest='cuda', action='store_false')
+    parser.add_argument('--single_gpu', dest='dataparallel', action='store_false')
 
     # hyperparams
     parser.add_argument('--feature_size', type=int, default=512)
     parser.add_argument('--lstm_memory', type=int, default=512)
     parser.add_argument('--embedding_size', type=int, default=512)
+    parser.add_argument('--min_freq', type=int, default=5)
     parser.add_argument('--imsize', type=int, default=224)
     parser.add_argument('--clip_len', type=int, default=16)
-    parser.add_argument('--bs', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--lr', type=float, default=1e-2)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     parser.add_argument('--patience', type=int, default=10)
-    parser.add_argument('--max_seqlen', type=int, default=30)
-    parser.add_argument('--max_epochs', type=int, default=20)
 
     # evaluation config
-    parser.add_argument('--batch_size', type=int, default=1, help='only for evaluation')
     parser.add_argument('--submission_path', type=str, default='submission.json')
     parser.add_argument('--json_path', type=str, default=None)
 

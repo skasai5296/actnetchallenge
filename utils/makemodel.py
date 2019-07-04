@@ -52,78 +52,40 @@ def generate_3dcnn(opt):
     if opt.cuda:
         model = model.to(torch.device('cuda'))
 
-    if not opt.pretrain_path:
+    if not opt.enc_pretrain_path:
         model.apply(weight_init)
         print('no path specified, starting 3DCNN model from scratch')
-        return model, model.parameters()
 
-    print('loading pretrained 3DCNN model from {}'.format(opt.pretrain_path))
-    pretrain = torch.load(opt.pretrain_path)
+    print('loading pretrained 3DCNN model from {}'.format(opt.enc_pretrain_path))
+    pretrain = torch.load(opt.enc_pretrain_path)
     assert opt.arch == pretrain['arch']
 
     model.load_state_dict(pretrain['state_dict'])
 
-    parameters = get_fine_tuning_parameters(model, opt.ft_begin_module)
+    return model
 
-    return model, parameters
 
-def generate_lstm(opt):
+def generate_rnn(vocab_size, opt):
     assert opt.rnn_name in [
         'LSTM', 'GRU', 'RNN'
     ]
 
-    model = getattr(nn, opt.rnn_name)(input_size=, hidden_size=, num_layers, batch_first=True, dropout=opt.rnn_dropout, bidirectional=False)
-    if opt.rnn_name == 'res:
-        model = resnet.generate_model(
-            model_depth=opt.cnn_depth,
-            shortcut_type=opt.resnet_shortcut,
-            conv1_t_size=opt.conv1_t_size,
-            conv1_t_stride=opt.conv1_t_stride,
-            no_max_pool=opt.no_max_pool)
-    elif opt.cnn_name == 'wideresnet':
-        model = wide_resnet.generate_model(
-            model_depth=opt.cnn_depth,
-            k=opt.wide_resnet_k,
-            shortcut_type=opt.resnet_shortcut,
-            conv1_t_size=opt.conv1_t_size,
-            conv1_t_stride=opt.conv1_t_stride,
-            no_max_pool=opt.no_max_pool)
-    elif opt.cnn_name == 'resnext':
-        model = resnext.generate_model(
-            model_depth=opt.cnn_depth,
-            cardinality=opt.resnext_cardinality,
-            shortcut_type=opt.resnet_shortcut,
-            conv1_t_size=opt.conv1_t_size,
-            conv1_t_stride=opt.conv1_t_stride,
-            no_max_pool=opt.no_max_pool)
-    elif opt.cnn_name == 'preresnet':
-        model = pre_act_resnet.generate_model(
-            model_depth=opt.cnn_depth,
-            shortcut_type=opt.resnet_shortcut,
-            conv1_t_size=opt.conv1_t_size,
-            conv1_t_stride=opt.conv1_t_stride,
-            no_max_pool=opt.no_max_pool)
-    elif opt.cnn_name == 'densenet':
-        model = densenet.generate_model(
-            model_depth=opt.cnn_depth,
-            conv1_t_size=opt.conv1_t_size,
-            conv1_t_stride=opt.conv1_t_stride,
-            no_max_pool=opt.no_max_pool)
+    if opt.model_name == 'LSTM':
+        model = LSTMCaptioning(input_size=opt.feature_size, emb_size=opt.embedding_size, lstm_memory=opt.lstm_memory, vocab_size=vocab_size, max_seqlen=opt.max_seqlen, num_layers=opt.rnn_layers, dropout_p=opt.rnn_dropout)
+    else:
+        raise NotImplementedError
 
     if opt.cuda:
         model = model.to(torch.device('cuda'))
 
-    if not opt.pretrain_path:
+    if not opt.dec_pretrain_path:
         model.apply(weight_init)
-        print('no path specified, starting 3DCNN model from scratch')
-        return model, model.parameters()
+        print('no path specified, starting RNN model from scratch')
 
-    print('loading pretrained 3DCNN model from {}'.format(opt.pretrain_path))
-    pretrain = torch.load(opt.pretrain_path)
+    print('loading pretrained RNN model from {}'.format(opt.dec_pretrain_path))
+    pretrain = torch.load(opt.dec_pretrain_path)
     assert opt.arch == pretrain['arch']
 
     model.load_state_dict(pretrain['state_dict'])
 
-    parameters = get_fine_tuning_parameters(model, opt.ft_begin_module)
-
-    return model, parameters
+    return model

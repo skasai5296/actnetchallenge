@@ -6,8 +6,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .resnet import conv1x1x1, Bottleneck, ResNet
-from utils import partialclass
 
+def partialclass(cls, *args, **kwargs):
+
+    class PartialClass(cls):
+        __init__ = partialmethod(cls.__init__, *args, **kwargs)
+
+    return PartialClass
 
 def get_inplanes():
     return [128, 256, 512, 1024]

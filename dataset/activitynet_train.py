@@ -121,7 +121,7 @@ class ActivityNetCaptions_Train(Dataset):
             'sentences': list of strings, caption
             'timestamps': list of [int, int], shows the beginning and end frames of action
             'fps': float, framerate of video
-            'clip' : torch.Tensor of size (C, T, H, W)
+            'clip' : list of torch.Tensor of size (C, T, H, W)
         """
         id = self.data[index]['id']
         duration = self.data[index]['duration']

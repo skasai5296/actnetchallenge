@@ -43,35 +43,39 @@ class LSTMCaptioning(nn.Module):
     # THWC must be flattened for image feature
     # image_feature : (batch_size, ft_size)
     # captions : (batch_size, seq_len)
-    # lengths : (batch_size,) (LongTensor of lengths)
-    # returns : list of tensors of size (batch_size, vocab_size), list of ints (lengths) to backward for each caption
-    def forward(self, image_feature, captions, lengths, init_state=None):
+    # returns : (batch_size, vocab_size, seq_len)
+    def forward(self, image_feature, captions, init_state=None):
         # feature : (batch_size, 1, emb_size)
         feature = self.linear1(image_feature).unsqueeze(1)
         # captions : (batch_size, seq_len, emb_size)
         captions = self.emb(captions)
         # inseq : (batch_size, 1+seq_len, emb_size)
         inseq = torch.cat((feature, captions), dim=1)
-        packed = pack_padded_sequence(inseq, lengths, batch_first=True)
-        hiddens, _ = self.rnn(packed)
-        outputs = self.linear2(hiddens[0])
+        # hiddens : (batch_size, seq_len, lstm_memory)
+        outputs, _ = self.rnn(inseq[:, :-1, :])
+        # outputs : (batch_size, vocab_size, seq_len)
+        outputs = self.linear2(hiddens).transpose(1, 2)
         return outputs
 
     # image_feature : (batch_size, ft_size)
     # method : one of ['greedy', 'beamsearch']
     def sample(self, image_feature, method='greedy', init_state=None):
         outputlist = []
-        # feature : (batch_size, emb_size)
+        # inputs : (batch_size, 1, emb_size)
         inputs = self.linear1(image_feature).unsqueeze(1)
+        states = init_state
         for idx in range(self.max_seqlen):
-            hiddens, states = self.rnn(inputs, init_state)
+            hiddens, states = self.rnn(inputs, states)
+            # outputs : (batch_size, vocab_size)
             outputs = self.linear2(hiddens.squeeze(1))
+            outputlist.append(outputs)
+            # pred : (batch_size), LongTensor
             _, pred = outputs.max(1)
-            outputlist.append(pred)
+            # inputs : (batch_size, emb_size)
             inputs = self.emb(pred)
             inputs = inputs.squeeze(1)
-        # outcaption : would be tensor of size (batch_size, max_seqlen)
-        sampled = torch.stack(outputlist, 1)
+        # sampled : (batch_size, vocab_size, max_seqlen)
+        sampled = torch.stack(outputlist, 2)
         return sampled
 
     # TODO

@@ -55,7 +55,7 @@ def accimage_loader(path):
         return pil_loader(path)
 
 
-class ActivityNetCaptions_Train(Dataset):
+class ActivityNetCaptions_Val(Dataset):
     """
     Args:
         root_path (string): Root directory path.
@@ -71,8 +71,8 @@ class ActivityNetCaptions_Train(Dataset):
     def __init__(self,
                  root_path,
                  frame_path='frames',
-                 id_path='train_ids.json',
-                 ann_path='train.json',
+                 id_path='val_ids.json',
+                 ann_path=['val_1.json', 'val_2.json'],
                  n_samples_for_each_video=2,
                  spatial_transform=None,
                  temporal_transform=None,
@@ -88,18 +88,19 @@ class ActivityNetCaptions_Train(Dataset):
             self.ids = json.load(f)
 
         # load annotation files
-        with open(os.path.join(root_path, ann_path)) as f:
-            ann = json.load(f)
-
         self.data = []
-        for id, obj in ann.items():
-            content = {}
-            content["id"] = id
-            content["duration"] = obj["duration"]
-            content["sentences"] = obj["sentences"]
-            content["timestamps"] = obj["timestamps"]
-            content["fps"] = obj["fps"]
-            self.data.append(content)
+        for path in ann_path:
+            with open(os.path.join(root_path, path)) as f:
+                ann = json.load(f)
+
+            for id, obj in ann.items():
+                content = {}
+                content["id"] = id
+                content["duration"] = obj["duration"]
+                content["sentences"] = obj["sentences"]
+                content["timestamps"] = obj["timestamps"]
+                content["fps"] = obj["fps"]
+                self.data.append(content)
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -121,7 +122,7 @@ class ActivityNetCaptions_Train(Dataset):
             'sentences': list of strings, caption
             'timestamps': list of [int, int], shows the beginning and end frames of action
             'fps': float, framerate of video
-            'clip' : torch.Tensor of size (C, T, H, W)
+            'clip' : list of torch.Tensor of size (C, T, H, W)
         """
         id = self.data[index]['id']
         duration = self.data[index]['duration']

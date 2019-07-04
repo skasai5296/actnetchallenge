@@ -53,14 +53,16 @@ def collate_fn(datas):
     sentencelist = []
     timestamplist = []
     fpslist = []
+    cliplist = []
     for data in datas:
         idlist.append(data['id'])
         durationlist.append(data['duration'])
         sentencelist.append(data['sentences'])
         timestamplist.append(data['timestamps'])
         fpslist.append(data['fps'])
+        cliplist.append(data['clips'])
 
-    return {'id': idlist, 'duration': durationlist, 'sentences': sentencelist, 'timestamps': timestamplist, 'fps': fpslist}
+    return {'id': idlist, 'duration': durationlist, 'sentences': sentencelist, 'timestamps': timestamplist, 'fps': fpslist, 'clips': cliplist}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -75,8 +77,6 @@ def get_pretrained_from_txt(path):
             lookup[token] = vec
     return lookup
 
-                nn.init.kaiming_normal_(
-                    m.weight, mode='fan_out', nonlinearity='relu')
 
 def weight_init(m):
     '''
@@ -238,6 +238,14 @@ def sec2str(sec):
         return "elapsed: {:02d} days, {:02d}h{:02d}m{:02d}s".format(dy, hr, min, sec)
 
 
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
 
 
 
