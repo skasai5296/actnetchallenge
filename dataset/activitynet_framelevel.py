@@ -52,7 +52,7 @@ def accimage_loader(path):
         return pil_loader(path)
 
 
-class ActivityNetCaptions_Train(Dataset):
+class ActivityNetCaptions_Frame(Dataset):
     """
     Args:
         root_path (string): Root directory path.
@@ -132,7 +132,6 @@ class ActivityNetCaptions_Train(Dataset):
             end_frame = min(int(fps * duration)-3, int(fps * timestamp[1]))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
-            assert len(frame_indices) > 0
             fidlist.append(frame_indices)
 
         clips = []

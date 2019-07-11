@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from imagemodels import resnet, pre_act_resnet, wide_resnet, resnext, densenet
 from langmodels.lstm import LSTMCaptioning
-from utils.utils import weight_init
+from utils.utils import weight_init, fix_model_state_dict, remove_fc
 
 def generate_3dcnn(opt):
     assert opt.cnn_name in [
@@ -56,7 +56,8 @@ def generate_3dcnn(opt):
     if opt.enc_pretrain_path is not None:
         print('loading pretrained 3DCNN model from {}'.format(opt.enc_pretrain_path))
         pretrain = torch.load(opt.enc_pretrain_path)
-        model.load_state_dict(pretrain['state_dict'])
+        fixed = remove_fc(fix_model_state_dict(pretrain['state_dict']))
+        model.load_state_dict(fixed)
     else:
         model.apply(weight_init)
         print('no path specified, starting 3DCNN model from scratch')
@@ -81,7 +82,8 @@ def generate_rnn(vocab_size, opt):
     if opt.dec_pretrain_path is not None:
         print('loading pretrained RNN model from {}'.format(opt.dec_pretrain_path))
         pretrain = torch.load(opt.dec_pretrain_path)
-        model.load_state_dict(pretrain['state_dict'])
+        fixed = fix_model_state_dict(pretrain['state_dict'])
+        model.load_state_dict(fixed)
     else:
         model.apply(weight_init)
         print('no path specified, starting RNN model from scratch')

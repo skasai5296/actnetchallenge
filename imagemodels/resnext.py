@@ -1,5 +1,5 @@
 import math
-from functools import partial
+from functools import partial, partialmethod
 
 import torch
 import torch.nn as nn
@@ -53,7 +53,7 @@ class ResNeXt(ResNet):
                  cardinality=32):
         block = partialclass(block, cardinality=cardinality)
         super().__init__(block, layers, block_inplanes, conv1_t_size,
-                         conv1_t_stride, no_max_pool, shortcut_type, n_classes)
+                         conv1_t_stride, no_max_pool, shortcut_type)
 
 
 

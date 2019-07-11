@@ -1,5 +1,6 @@
 import sys, os
 from functools import partialmethod
+from collections import OrderedDict
 
 import numpy as np
 
@@ -11,8 +12,25 @@ import torch.nn.init as init
 import torch.nn.functional as F
 
 
+PAD=0
 
-PAD = 0
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
+
+def remove_fc(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('fc.'):
+            continue
+        new_state_dict[name] = v
+    return new_state_dict
 
 class Identity(nn.Module):
     def __init__(self):

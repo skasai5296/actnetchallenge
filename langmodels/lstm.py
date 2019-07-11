@@ -73,7 +73,7 @@ class LSTMCaptioning(nn.Module):
             _, pred = outputs.max(1)
             # inputs : (batch_size, emb_size)
             inputs = self.emb(pred)
-            inputs = inputs.squeeze(1)
+            inputs = inputs.unsqueeze(1)
         # sampled : (batch_size, vocab_size, max_seqlen)
         sampled = torch.stack(outputlist, 2)
         return sampled

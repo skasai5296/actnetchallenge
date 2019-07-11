@@ -41,8 +41,10 @@ def train_lstm(args):
     # dataloading
     train_dset = ActivityNetCaptions_Train(args.root_path, ann_path='train_fps.json', n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
     trainloader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True)
+    max_train_it = int(len(train_dset) / args.batch_size)
     val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
     valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True)
+    max_val_it = int(len(val_dset) / args.batch_size)
 
     # models
     video_encoder = generate_3dcnn(args)
@@ -80,13 +82,11 @@ def train_lstm(args):
 
     # loss function
     criterion = nn.CrossEntropyLoss(ignore_index=text_proc.vocab.stoi['<pad>'])
-    # elif args.langmethod == 'Transformer':
-    #     criterion = LabelSmoothingLoss(label_smoothing=0.1, out_classes=len(vocab))
 
     # optimizer, scheduler
     params = list(video_encoder.parameters()) + list(caption_gen.parameters())
     optimizer = optim.SGD(params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.9, patience=args.patience, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.9, patience=args.patience, verbose=True)
 
     # count parameters
     num_params = sum(count_parameters(model) for model in models)
@@ -98,15 +98,7 @@ def train_lstm(args):
     for ep in range(args.max_epochs):
 
         # train for epoch
-        video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, log_interval=args.log_every)
-        print("begin evaluation for epoch {} ...".format(ep+1))
-        nll, ppl, sample = validate(valloader, video_encoder, caption_gen, criterion, device)
-
-        scheduler.step(nll)
-        print("{}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
-        samplesentence = return_sentences(sample, text_proc)
-        print("sample sentences: ")
-        print(samplesentence)
+        video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, log_interval=args.log_every, max_it=max_train_it)
 
         # save models
         enc_save_dir = os.path.join(args.model_save_path, "encoder")
@@ -131,10 +123,17 @@ def train_lstm(args):
         print("saved encoder model to {}".format(enc_save_path))
         print("saved decoder model to {}".format(dec_save_path))
 
+        # evaluate
+        print("begin evaluation for epoch {} ...".format(ep+1))
+        nll, ppl, sample = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
+        scheduler.step(ppl)
+
+        print("{}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
+
     print("end training")
 
 
-def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, text_proc, log_interval):
+def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, text_proc, log_interval, max_it):
 
     ep_begin = time.time()
     before = time.time()
@@ -172,15 +171,18 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
 
         # log losses
         if it % log_interval == (log_interval-1):
-            print("epoch {} | iter {:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, nll.cpu().item(), (time.time()-before)/log_interval), flush=True)
+            print("epoch {} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, max_it, nll.cpu().item(), (time.time()-before)/log_interval), flush=True)
             before = time.time()
+
     return encoder, decoder, optimizer
 
-def validate(valloader, encoder, decoder, criterion, device):
+def validate(valloader, encoder, decoder, criterion, device, text_proc, log_interval, max_it):
     encoder.eval()
     decoder.eval()
     nll_list = []
     ppl_list = []
+    begin = time.time()
+    before = time.time()
     with torch.no_grad():
         for it, data in enumerate(valloader):
             # TODO: currently supports only batch size of 1, enable more in the future
@@ -196,14 +198,18 @@ def validate(valloader, encoder, decoder, criterion, device):
             # move to device
             clip = clip.to(device)
             captions = captions.to(device)
-            target = captions.clone().detach().requires_grad(True)
+            target = captions.clone().detach()
 
             # flow through model
             # feature : (bs x C')
             feature = encoder(clip)
 
             # output : (batch_size, vocab_size, seq_len)
-            output = decoder.sample(feature, captions)
+            try:
+                output = decoder.sample(feature, captions)
+            # workaround for dataparallel
+            except AttributeError:
+                output = decoder.module.sample(feature, captions)
 
             # sample : (seq_len)
             sample = output.max(1)
@@ -214,10 +220,21 @@ def validate(valloader, encoder, decoder, criterion, device):
             ppl = 2 ** nll
             ppl_list.append(ppl)
 
-        meannll = sum(nll_list) / len(nll_list)
-        meanppl = sum(ppl_list) / len(ppl_list)
+            if it % log_interval == (log_interval-1):
+                print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/log_interval), flush=True)
+                before = time.time()
+                samplesentence = return_sentences(sample, text_proc)
+                print("sample sentences: ")
+                print(samplesentence)
 
-    return meannll, meanppl, sample
+            # evaluate for only 100 iterations
+            if it % 100 == 99:
+                break
+
+    meannll = sum(nll_list) / len(nll_list)
+    meanppl = sum(ppl_list) / len(ppl_list)
+
+    return meannll, meanppl
 
 
 if __name__ == '__main__':
