@@ -71,9 +71,8 @@ class ActivityNetCaptions_Val(Dataset):
     def __init__(self,
                  root_path,
                  frame_path='frames',
-                 id_path='val_ids.json',
-                 ann_path=['val_1.json', 'val_2.json'],
-                 n_samples_for_each_video=2,
+                 ann_path=['val_1_fps.json', 'val_2_fps.json'],
+                 n_samples_for_each_video=1,
                  spatial_transform=None,
                  temporal_transform=None,
                  target_transform=None,
@@ -83,10 +82,6 @@ class ActivityNetCaptions_Val(Dataset):
         # save frame root path
         self.frm_path = os.path.join(root_path, frame_path)
 
-        # load video ids
-        with open(os.path.join(root_path, id_path)) as f:
-            self.ids = json.load(f)
-
         # load annotation files
         self.data = []
         for path in ann_path:
@@ -94,6 +89,8 @@ class ActivityNetCaptions_Val(Dataset):
                 ann = json.load(f)
 
             for id, obj in ann.items():
+                if "fps" not in obj.keys():
+                    continue
                 content = {}
                 content["id"] = id
                 content["duration"] = obj["duration"]
@@ -107,9 +104,9 @@ class ActivityNetCaptions_Val(Dataset):
         self.target_transform = target_transform
         self.loader = get_loader()
         self.len = len(self.data)
+        print("Validation dataset length: ", self.len)
         self.sample_duration = sample_duration
         self.n_actions = n_samples_for_each_video
-        print(self.data)
 
     def __getitem__(self, index):
         """
@@ -121,7 +118,7 @@ class ActivityNetCaptions_Val(Dataset):
             'duration': int, length of clip in seconds
             'sentences': list of strings, caption
             'timestamps': list of [int, int], shows the beginning and end frames of action
-            'fps': float, framerate of video
+            'fps': float, framerate of video, some videos don't contain this
             'clip' : list of torch.Tensor of size (C, T, H, W)
         """
         id = self.data[index]['id']
@@ -135,10 +132,8 @@ class ActivityNetCaptions_Val(Dataset):
             if num == self.n_actions:
                 break
             sentences.append(sentence)
-            begin_frame = min(int(fps * duration), max(0, int(fps * timestamp[0])))
-            end_frame = min(int(fps * duration), max(0, int(fps * timestamp[1])))
-            begin_frame = min(int(fps * duration), max(0, int(fps * timestamp[0])))
-            end_frame = min(int(fps * duration), max(0, int(fps * timestamp[1])))
+            begin_frame = min(int(fps * duration), max(1, int(fps * timestamp[0])))
+            end_frame = min(int(fps * duration), max(1, int(fps * timestamp[1])))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
             fidlist.append(frame_indices)
@@ -148,7 +143,7 @@ class ActivityNetCaptions_Val(Dataset):
             if self.temporal_transform is not None:
                 frame_indices = self.temporal_transform(frame_indices)
 
-            clip = self.loader(self.frm_path, frame_indices)
+            clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
             if self.spatial_transform is not None:
                 self.spatial_transform.randomize_parameters()
                 clip = [self.spatial_transform(img) for img in clip]

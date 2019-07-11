@@ -23,7 +23,7 @@ class LSTMCaptioning(nn.Module):
                  num_layers=1,
                  dropout_p=0.1
                  ):
-        super(RNNCaptioning, self).__init__()
+        super(LSTMCaptioning, self).__init__()
         self.ft_size = ft_size
         self.emb_size = emb_size
         self.lstm_memory = lstm_memory
@@ -52,7 +52,7 @@ class LSTMCaptioning(nn.Module):
         # inseq : (batch_size, 1+seq_len, emb_size)
         inseq = torch.cat((feature, captions), dim=1)
         # hiddens : (batch_size, seq_len, lstm_memory)
-        outputs, _ = self.rnn(inseq[:, :-1, :])
+        hiddens, _ = self.rnn(inseq[:, :-1, :])
         # outputs : (batch_size, vocab_size, seq_len)
         outputs = self.linear2(hiddens).transpose(1, 2)
         return outputs
@@ -81,21 +81,6 @@ class LSTMCaptioning(nn.Module):
     # TODO
     def init_pretrained_weights(self, vocab):
         self.emb.init_pretrained_weights(vocab)
-
-
-
-
-class Transformer(nn.Module):
-    def __init__(self,
-                 vocab_size=None,
-                 mem_dim=None
-                 ):
-        super(Transformer, self).__init__()
-        self.model = None
-
-    def forward(self, x):
-        pass
-
 
 
 if __name__ == '__main__':

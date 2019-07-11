@@ -31,11 +31,10 @@ class LoopPadding(object):
     def __call__(self, frame_indices):
         out = frame_indices
 
-        while len(out) < self.size:
-            for index in out:
-                if len(out) >= self.size:
-                    break
-                out.append(index)
+        for index in out:
+            if len(out) >= self.size:
+                break
+            out.append(index)
 
         return out
 

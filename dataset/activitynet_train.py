@@ -21,6 +21,7 @@ def video_loader(video_dir_path, frame_indices, image_loader):
         if os.path.exists(image_path):
             video.append(image_loader(image_path))
         else:
+            print(image_path, " does not exist!!!")
             return video
 
     return video
@@ -41,10 +42,6 @@ def get_default_image_loader():
 def pil_loader(path):
     img = Image.open(path)
     return img.convert('RGB')
-    """
-    with Image.open(path) as img:
-        return img.convert('RGB')
-    """
 
 def accimage_loader(path):
     try:
@@ -71,9 +68,8 @@ class ActivityNetCaptions_Train(Dataset):
     def __init__(self,
                  root_path,
                  frame_path='frames',
-                 id_path='train_ids.json',
-                 ann_path='train.json',
-                 n_samples_for_each_video=2,
+                 ann_path='train_fps.json',
+                 n_samples_for_each_video=1,
                  spatial_transform=None,
                  temporal_transform=None,
                  target_transform=None,
@@ -83,16 +79,14 @@ class ActivityNetCaptions_Train(Dataset):
         # save frame root path
         self.frm_path = os.path.join(root_path, frame_path)
 
-        # load video ids
-        with open(os.path.join(root_path, id_path)) as f:
-            self.ids = json.load(f)
-
         # load annotation files
         with open(os.path.join(root_path, ann_path)) as f:
             ann = json.load(f)
 
         self.data = []
         for id, obj in ann.items():
+            if "fps" not in obj.keys():
+                continue
             content = {}
             content["id"] = id
             content["duration"] = obj["duration"]
@@ -106,9 +100,9 @@ class ActivityNetCaptions_Train(Dataset):
         self.target_transform = target_transform
         self.loader = get_loader()
         self.len = len(self.data)
+        print("Train dataset length: ", self.len)
         self.sample_duration = sample_duration
         self.n_actions = n_samples_for_each_video
-        print(self.data)
 
     def __getitem__(self, index):
         """
@@ -134,10 +128,8 @@ class ActivityNetCaptions_Train(Dataset):
             if num == self.n_actions:
                 break
             sentences.append(sentence)
-            begin_frame = min(int(fps * duration), max(0, int(fps * timestamp[0])))
-            end_frame = min(int(fps * duration), max(0, int(fps * timestamp[1])))
-            begin_frame = min(int(fps * duration), max(0, int(fps * timestamp[0])))
-            end_frame = min(int(fps * duration), max(0, int(fps * timestamp[1])))
+            begin_frame = min(int(fps * duration), max(1, int(fps * timestamp[0])))
+            end_frame = min(int(fps * duration), max(1, int(fps * timestamp[1])))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
             fidlist.append(frame_indices)
@@ -147,7 +139,7 @@ class ActivityNetCaptions_Train(Dataset):
             if self.temporal_transform is not None:
                 frame_indices = self.temporal_transform(frame_indices)
 
-            clip = self.loader(self.frm_path, frame_indices)
+            clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
             if self.spatial_transform is not None:
                 self.spatial_transform.randomize_parameters()
                 clip = [self.spatial_transform(img) for img in clip]

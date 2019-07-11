@@ -47,23 +47,6 @@ class LabelSmoothingLoss(nn.Module):
 
         return loss
 
-def collate_fn(datas):
-    idlist = []
-    durationlist = []
-    sentencelist = []
-    timestamplist = []
-    fpslist = []
-    cliplist = []
-    for data in datas:
-        idlist.append(data['id'])
-        durationlist.append(data['duration'])
-        sentencelist.append(data['sentences'])
-        timestamplist.append(data['timestamps'])
-        fpslist.append(data['fps'])
-        cliplist.append(data['clips'])
-
-    return {'id': idlist, 'duration': durationlist, 'sentences': sentencelist, 'timestamps': timestamplist, 'fps': fpslist, 'clips': cliplist}
-
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 

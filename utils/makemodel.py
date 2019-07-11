@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from imagemodels import resnet, pre_act_resnet, wide_resnet, resnext, densenet
+from langmodels.lstm import LSTMCaptioning
 from utils.utils import weight_init
 
 def generate_3dcnn(opt):
@@ -52,15 +53,14 @@ def generate_3dcnn(opt):
     if opt.cuda:
         model = model.to(torch.device('cuda'))
 
-    if not opt.enc_pretrain_path:
+    if opt.enc_pretrain_path is not None:
+        print('loading pretrained 3DCNN model from {}'.format(opt.enc_pretrain_path))
+        pretrain = torch.load(opt.enc_pretrain_path)
+        model.load_state_dict(pretrain['state_dict'])
+    else:
         model.apply(weight_init)
         print('no path specified, starting 3DCNN model from scratch')
 
-    print('loading pretrained 3DCNN model from {}'.format(opt.enc_pretrain_path))
-    pretrain = torch.load(opt.enc_pretrain_path)
-    assert opt.arch == pretrain['arch']
-
-    model.load_state_dict(pretrain['state_dict'])
 
     return model
 
@@ -70,22 +70,21 @@ def generate_rnn(vocab_size, opt):
         'LSTM', 'GRU', 'RNN'
     ]
 
-    if opt.model_name == 'LSTM':
-        model = LSTMCaptioning(input_size=opt.feature_size, emb_size=opt.embedding_size, lstm_memory=opt.lstm_memory, vocab_size=vocab_size, max_seqlen=opt.max_seqlen, num_layers=opt.rnn_layers, dropout_p=opt.rnn_dropout)
+    if opt.rnn_name == 'LSTM':
+        model = LSTMCaptioning(ft_size=opt.feature_size, emb_size=opt.embedding_size, lstm_memory=opt.lstm_memory, vocab_size=vocab_size, max_seqlen=opt.max_seqlen, num_layers=opt.rnn_layers, dropout_p=opt.rnn_dropout)
     else:
         raise NotImplementedError
 
     if opt.cuda:
         model = model.to(torch.device('cuda'))
 
-    if not opt.dec_pretrain_path:
+    if opt.dec_pretrain_path is not None:
+        print('loading pretrained RNN model from {}'.format(opt.dec_pretrain_path))
+        pretrain = torch.load(opt.dec_pretrain_path)
+        model.load_state_dict(pretrain['state_dict'])
+    else:
         model.apply(weight_init)
         print('no path specified, starting RNN model from scratch')
 
-    print('loading pretrained RNN model from {}'.format(opt.dec_pretrain_path))
-    pretrain = torch.load(opt.dec_pretrain_path)
-    assert opt.arch == pretrain['arch']
-
-    model.load_state_dict(pretrain['state_dict'])
 
     return model

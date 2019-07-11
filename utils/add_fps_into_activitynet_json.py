@@ -1,13 +1,20 @@
 import sys
 import json
 import subprocess
+import argparse
 from pathlib import Path
 
 if __name__ == '__main__':
-    video_dir_path = Path(sys.argv[1])
-    json_path = Path(sys.argv[2])
-    if len(sys.argv) > 3:
-        dst_json_path = Path(sys.argv[3])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--video_path', type=str, help='Path to videos')
+    parser.add_argument('-s', '--json_path', type=str, help='Path to json file')
+    parser.add_argument('-o', '--save_path', type=str, help='Path to json file to save')
+    args = parser.parse_args()
+
+    video_dir_path = Path(args.video_path)
+    json_path = Path(args.json_path)
+    if args.save_path:
+        dst_json_path = Path(args.save_path)
     else:
         dst_json_path = json_path
 
@@ -26,7 +33,11 @@ if __name__ == '__main__':
         res = p.communicate()[1].decode('utf-8')
 
         fps = float([x for x in res.split(',') if 'fps' in x][0].rstrip('fps'))
-        json_data[id]['fps'] = fps
+        try:
+            json_data[id]['fps'] = fps
+            print('succ: ', id)
+        except KeyError:
+            print('fail: ', id)
 
     with dst_json_path.open('w') as f:
         json.dump(json_data, f)

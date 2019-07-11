@@ -34,23 +34,21 @@ def parse(sentence, text_proc):
     processed = text_proc.preprocess(sentence.strip())
     return processed
 
+# sentence_batch: list of str
 # return indexes of sentence batch as torch.LongTensor
 def return_idx(sentence_batch, text_proc):
     out = []
-    for sentence in sentence_batch:
-        processed = parse(sentence)
-        idx = []
-        for token in processed:
-            idx.append(sent_proc.stoi(token))
-        out.append(idx)
-    return torch.tensor(out, dtype=torch.long)
+    preprocessed = list(map(text_proc.preprocess, sentence_batch))
+    out = text_proc.process(preprocessed)
+    return out
 
 # return sentence batch from indexes from torch.LongTensor
 def return_sentences(ten, text_proc):
-    ten = ten.tolist()
+    if isinstance(ten, torch.Tensor):
+        ten = ten.tolist()
     out = []
     for idxs in ten:
-        tokenlist = [text_proc.itos[idx] for idx in idxs]
+        tokenlist = [text_proc.vocab.itos[idx] for idx in idxs]
         out.append(" ".join(tokenlist))
     return out
 
@@ -58,5 +56,9 @@ def return_sentences(ten, text_proc):
 if __name__ == '__main__':
 
     text_proc = build_vocab(["/ssd1/dsets/activitynet_captions/train.json", "/ssd1/dsets/activitynet_captions/val_1.json", "/ssd1/dsets/activitynet_captions/val_2.json"])
-    print(parse("the cat and the hat sat on a mat", text_proc))
+    sentence = ["the cat and the hat sat on a mat"]
+    ten = return_idx(sentence, text_proc)
+    print(ten)
+    sent = return_sentences(ten, text_proc)
+    print(sent)
 
