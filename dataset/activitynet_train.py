@@ -4,7 +4,9 @@ sys.path.append(os.pardir)
 from PIL import Image
 import functools
 import json
+import re
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
@@ -89,11 +91,14 @@ class ActivityNetCaptions_Train(Dataset):
                 continue
             content = {}
             content["id"] = id
-            content["duration"] = obj["duration"]
+            lastfile = os.listdir(os.path.join(self.frm_path, id))[-1]
+            lastframenum = int(re.findall(r'\d+', lastfile)[0])
+            content["duration"] = lastframenum
             content["sentences"] = obj["sentences"]
             content["timestamps"] = obj["timestamps"]
             content["fps"] = obj["fps"]
             self.data.append(content)
+
 
         self.spatial_transform = spatial_transform
         self.temporal_transform = temporal_transform
@@ -129,32 +134,30 @@ class ActivityNetCaptions_Train(Dataset):
                 break
             sentences.append(sentence)
             begin_frame = max(1, int(fps * timestamp[0]))
-            end_frame = min(int(fps * duration)-5, int(fps * timestamp[1]))
+            end_frame = min(duration, int(fps * timestamp[1]))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
             assert len(frame_indices) > 0
             fidlist.append(frame_indices)
 
-        clips = []
-        for frame_indices in fidlist:
-            if self.temporal_transform is not None:
-                frame_indices = self.temporal_transform(frame_indices)
+        frame_indices = fidlist[np.random.randint(0, len(sentences))]
+        if self.temporal_transform is not None:
+            frame_indices = self.temporal_transform(frame_indices)
 
-            clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
-            if self.spatial_transform is not None:
-                self.spatial_transform.randomize_parameters()
-                clip = [self.spatial_transform(img) for img in clip]
-            try:
-                clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-                assert clip.size(1) == self.sample_duration
-            except:
-                print("stack failed or clip is not right size", flush=True)
-                print(len(clip), flush=True)
-                print([cl.size() for cl in clip], flush=True)
-                print(id, flush=True)
-            clips.append(clip)
+        clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
+        if self.spatial_transform is not None:
+            self.spatial_transform.randomize_parameters()
+            clip = [self.spatial_transform(img) for img in clip]
+        try:
+            clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+            assert clip.size(1) == self.sample_duration
+        except:
+            print("stack failed or clip is not right size", flush=True)
+            print(len(clip), flush=True)
+            print([cl.size() for cl in clip], flush=True)
+            print(id, flush=True)
 
-        return {'id': id, 'duration': duration, 'sentences': sentences, 'timestamps': timestamps, 'fps': fps, 'clips': clips}
+        return {'id': id, 'duration': duration, 'sentences': sentences, 'timestamps': timestamps, 'fps': fps, 'clip': clip}
 
     def __len__(self):
         return self.len

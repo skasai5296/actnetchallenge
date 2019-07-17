@@ -1,5 +1,5 @@
-# actnetchallenge
-repo for activity net challenge 2019
+# actnetchallenge: Task 3 (Dense-Captioning Events in Videos)
+Repo for activity net challenge 2019: Task 3 (Dense-Captioning Events in Videos)
 This repository provides a dense video captioning module for ActivityNet Captions Dataset.
 
 TO-DO:

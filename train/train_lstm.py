@@ -128,7 +128,7 @@ def train_lstm(args):
         nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
         scheduler.step(ppl)
 
-        print("{}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
+        print("training time {}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
 
     print("end training")
 
@@ -139,12 +139,12 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
     before = time.time()
     for it, data in enumerate(trainloader):
         # TODO: currently supports only one timestamp, enable more in the future
-        ids = data['id'][0]
-        durations = data['duration'][0]
-        sentences = data['sentences'][0]
-        timestamps = data['timestamps'][0]
-        fps = data['fps'][0]
-        clip = data['clips'][0]
+        ids = data['id']
+        durations = data['duration']
+        sentences = data['sentences']
+        timestamps = data['timestamps']
+        fps = data['fps']
+        clip = data['clip']
 
         captions = return_idx(sentences, text_proc)
 
