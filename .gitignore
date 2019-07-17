@@ -3,6 +3,7 @@
 *.ckpt
 *.out
 *.json
+*.ipynb
 models/
 wordvectors/
 logs/

@@ -129,7 +129,7 @@ class ActivityNetCaptions_Train(Dataset):
                 break
             sentences.append(sentence)
             begin_frame = max(1, int(fps * timestamp[0]))
-            end_frame = min(int(fps * duration)-3, int(fps * timestamp[1]))
+            end_frame = min(int(fps * duration)-5, int(fps * timestamp[1]))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
             assert len(frame_indices) > 0
@@ -151,6 +151,7 @@ class ActivityNetCaptions_Train(Dataset):
                 print("stack failed or clip is not right size", flush=True)
                 print(len(clip), flush=True)
                 print([cl.size() for cl in clip], flush=True)
+                print(id, flush=True)
             clips.append(clip)
 
         return {'id': id, 'duration': duration, 'sentences': sentences, 'timestamps': timestamps, 'fps': fps, 'clips': clips}

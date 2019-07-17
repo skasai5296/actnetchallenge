@@ -40,10 +40,10 @@ def train_lstm(args):
 
     # dataloading
     train_dset = ActivityNetCaptions_Train(args.root_path, ann_path='train_fps.json', n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    trainloader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True)
+    trainloader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=10)
     max_train_it = int(len(train_dset) / args.batch_size)
     val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True)
+    valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=10)
     max_val_it = int(len(val_dset) / args.batch_size)
 
     # models
@@ -223,7 +223,6 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, log_inte
             if it % log_interval == (log_interval-1):
                 print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/log_interval), flush=True)
                 before = time.time()
-                print(sample.size())
                 samplesentence = return_sentences(sample, text_proc)
                 print("sample sentences: ")
                 for sent in samplesentence:

@@ -4,6 +4,8 @@ sys.path.append(os.pardir)
 import torch
 import torch.nn as nn
 
+import torchvision
+
 from imagemodels import resnet, pre_act_resnet, wide_resnet, resnext, densenet
 from langmodels.lstm import LSTMCaptioning
 from utils.utils import weight_init, fix_model_state_dict, remove_fc

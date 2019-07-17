@@ -154,6 +154,7 @@ class ActivityNetCaptions_Val(Dataset):
                 print("stack failed or clip is not right size", flush=True)
                 print(len(clip), flush=True)
                 print([cl.size() for cl in clip], flush=True)
+                print(id)
             clips.append(clip)
 
         return {'id': id, 'duration': duration, 'sentences': sentences, 'timestamps': timestamps, 'fps': fps, 'clips': clips}
@@ -233,8 +234,8 @@ class ActivityNetCaptions_Test(Dataset):
         for num, timestamp in enumerate(self.data[index]['timestamps']):
             if num == self.n_actions:
                 break
-            begin_frame = min(int(fps * duration), max(1, int(fps * timestamp[0])))
-            end_frame = min(int(fps * duration), max(1, int(fps * timestamp[1])))
+            begin_frame = max(1, int(fps * timestamp[0]))
+            end_frame = min(int(fps * duration-3), int(fps * timestamp[1]))
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
             fidlist.append(frame_indices)
@@ -255,6 +256,7 @@ class ActivityNetCaptions_Test(Dataset):
                 print("stack failed or clip is not right size", flush=True)
                 print(len(clip), flush=True)
                 print([cl.size() for cl in clip], flush=True)
+                print(id, flush=True)
             clips.append(clip)
 
         return {'id': id, 'duration': duration, 'timestamps': timestamps, 'fps': fps, 'clips': clips}
