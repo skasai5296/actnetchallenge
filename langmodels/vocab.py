@@ -55,7 +55,9 @@ def return_sentences(ten, text_proc):
 # for debugging
 if __name__ == '__main__':
 
-    text_proc = build_vocab(["/ssd1/dsets/activitynet_captions/train.json", "/ssd1/dsets/activitynet_captions/val_1.json", "/ssd1/dsets/activitynet_captions/val_2.json"])
+    files = ["train.json, val_1.json, val_2.json"]
+    files = [os.path.join("/ssd1/dsets/activitynet_captions", pth) for pth in files]
+    text_proc = build_vocab(files)
     sentence = ["the cat and the hat sat on a mat"]
     ten = return_idx(sentence, text_proc)
     print(ten)
