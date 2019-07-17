@@ -147,8 +147,7 @@ class DenseNet(nn.Module):
                  block_config=(6, 12, 24, 16),
                  num_init_features=64,
                  bn_size=4,
-                 drop_rate=0,
-                 num_classes=1000):
+                 drop_rate=0):
 
         super(DenseNet, self).__init__()
 
@@ -192,15 +191,6 @@ class DenseNet(nn.Module):
         # Final batch norm
         self.features.add_module('norm5', nn.BatchNorm2d(num_features))
 
-        for m in self.modules():
-            if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
-            elif isinstance(m, nn.BatchNorm3d) or isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-
-        # Linear layer
-        self.classifier = nn.Linear(num_features, num_classes)
 
     def forward(self, x):
         features = self.features(x)
@@ -210,5 +200,4 @@ class DenseNet(nn.Module):
         out = F.avg_pool3d(
             out, kernel_size=(last_duration, last_size, last_size)).view(
                 features.size(0), -1)
-        out = self.classifier(out)
         return out

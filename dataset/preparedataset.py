@@ -25,9 +25,9 @@ def downloader(download_path, urlgen):
         try:
             yt = YouTube(url)
             st = yt.streams.filter(file_extension='mp4').first()
-            st.download(output_path=download_path, filename=str(id))
+            st.download(output_path=download_path, filename=str("v_" + id))
             succeedcnt += 1
-            print('downloaded {}.mp4, total = {}'.format(id, succeedcnt), flush=True)
+            print('downloaded v_{}.mp4, total = {}'.format(id, succeedcnt), flush=True)
         except:
             failcnt += 1
             print('could not download {}.mp4, failcount = {}'.format(id, failcnt), flush=True)

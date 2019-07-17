@@ -8,35 +8,13 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-sys.path.append(os.pardir)
-from utils.utils import *
-
-
-# embedding module.
-# (***) -> (***, embedding_size)
-class Embedding(nn.Module):
-    def __init__(self,
-                 vocab_size,
-                 embedding_size=512
-                 ):
-        super(Embedding, self).__init__()
-        self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
-        self.emb = nn.Embedding(self.vocab_size, self.embedding_size)
-
-    def forward(self, x):
-        return self.emb(x)
-
-    # TODO
-    def init_pretrained_weights(self, vocab):
-        pass
+#from utils.utils import *
 
 
 # captioning module.
 # lstm_memory must be same as output dimension of encoder (3DCNN). TCHW must be flattened.
-class RNNCaptioning(nn.Module):
+class LSTMCaptioning(nn.Module):
     def __init__(self,
-                 method='LSTM',
                  ft_size=512,
                  emb_size=512,
                  lstm_memory=512,
@@ -45,8 +23,7 @@ class RNNCaptioning(nn.Module):
                  num_layers=1,
                  dropout_p=0.1
                  ):
-        super(RNNCaptioning, self).__init__()
-        self.method = method
+        super(LSTMCaptioning, self).__init__()
         self.ft_size = ft_size
         self.emb_size = emb_size
         self.lstm_memory = lstm_memory
@@ -56,86 +33,123 @@ class RNNCaptioning(nn.Module):
 
         self.linear1 = nn.Linear(self.ft_size, self.emb_size)
         self.emb = nn.Embedding(self.vocab_size, self.emb_size)
-        if method == 'LSTM':
-            #self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True)
-            self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
+        self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True, dropout=dropout_p)
+        #self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
         self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
-        self.dropout = nn.Dropout(p=dropout_p)
 
     def init_embedding(self, tensor):
         self.emb.weight.data.copy_(tensor)
 
     # THWC must be flattened for image feature
     # image_feature : (batch_size, ft_size)
-    # captions : (batch_size, seq_len) (LongTensor of indexes, padded sequence)
-    # lengths : (batch_size,) (LongTensor of lengths)
-    # returns : list of tensors of size (batch_size, vocab_size), list of ints (lengths) to backward for each caption
-    def forward(self, image_feature, captions, lengths, init_state=None):
-        # feature : (batch_size, emb_size)
-        feature = self.linear1(image_feature)
-        # h_n, c_n : (batch_size, lstm_memory)
-        h_n, c_n = self.rnn(feature, init_state)
-        # token1 : (batch_size, vocab_size)
-        token1 = self.linear2(h_n)
-        outputlist = [token1]
-        # captions : (seq_len, batch_size, emb_size)
-        captions = self.emb(captions).transpose(0, 1)
-        idx = 0
-        maxlen = min(self.max_seqlen, captions.size(0))
-        while idx < maxlen-1:
-            # h_n : (batch_size, lstm_memory)
-            (h_n, c_n) = self.rnn(captions[idx], (h_n, c_n))
-            # tokenn : (batch_size, vocab_size)
-            tokenn = self.dropout(self.linear2(h_n))
-            outputlist.append(tokenn)
-            idx += 1
-        # outcaption : would be tensor of size (batch_size, maxlen, vocab_size)
-        outcaption = torch.stack(outputlist).transpose(0, 1)
-        lengths = [min(length, self.max_seqlen) for length in lengths]
-        outputs = pack_padded_sequence(outcaption, lengths, batch_first=True)
-        return outcaption, lengths
+    # captions : (batch_size, seq_len)
+    # returns : (batch_size, vocab_size, seq_len)
+    def forward(self, image_feature, captions, init_state=None):
+        # feature : (batch_size, 1, emb_size)
+        feature = self.linear1(image_feature).unsqueeze(1)
+        # captions : (batch_size, seq_len, emb_size)
+        captions = self.emb(captions)
+        # inseq : (batch_size, 1+seq_len, emb_size)
+        inseq = torch.cat((feature, captions), dim=1)
+        # hiddens : (batch_size, seq_len, lstm_memory)
+        hiddens, _ = self.rnn(inseq[:, :-1, :])
+        # outputs : (batch_size, vocab_size, seq_len)
+        outputs = self.linear2(hiddens).transpose(1, 2)
+        return outputs
 
     # image_feature : (batch_size, ft_size)
     # method : one of ['greedy', 'beamsearch']
-    def decode(self, image_feature, method='greedy', init_state=None):
+    def sample(self, image_feature, method='greedy', init_state=None):
         outputlist = []
-        # feature : (batch_size, emb_size)
-        feature = self.linear1(image_feature)
-        # h_n, c_n : (batch_size, lstm_memory)
-        h_n, c_n = self.rnn(feature, init_state)
+        # inputs : (batch_size, 1, emb_size)
+        inputs = self.linear1(image_feature).unsqueeze(1)
+        states = init_state
         for idx in range(self.max_seqlen):
-            # o_n : (batch_size, vocab_size)
-            o_n = self.linear2(h_n)
-            # tokenid : (batch_size,)
-            tokenid = o_n.argmax(dim=1)
-            outputlist.append(tokenid)
+            hiddens, states = self.rnn(inputs, states)
+            # outputs : (batch_size, vocab_size)
+            outputs = self.linear2(hiddens.squeeze(1))
+            outputlist.append(outputs)
+            # pred : (batch_size), LongTensor
+            _, pred = outputs.max(1)
             # inputs : (batch_size, emb_size)
-            inputs = self.emb(tokenid)
-            # h_n : (batch_size, lstm_memory)
-            (h_n, c_n) = self.rnn(inputs, (h_n, c_n))
-        # outcaption : would be tensor of size (batch_size, max_seqlen)
-        outcaption = torch.stack(outputlist).transpose(0, 1)
-        return outcaption
+            inputs = self.emb(pred)
+            inputs = inputs.unsqueeze(1)
+        # sampled : (batch_size, vocab_size, max_seqlen)
+        sampled = torch.stack(outputlist, 2)
+        return sampled
 
     # TODO
     def init_pretrained_weights(self, vocab):
         self.emb.init_pretrained_weights(vocab)
 
-
-
-
-class Transformer(nn.Module):
+class LSTMCaptioningWithAttention(nn.Module):
     def __init__(self,
-                 vocab_size=None,
-                 mem_dim=None
+                 ft_size=512,
+                 emb_size=512,
+                 lstm_memory=512,
+                 vocab_size=100,
+                 max_seqlen=20,
+                 num_layers=1,
+                 dropout_p=0.1
                  ):
-        super(Transformer, self).__init__()
-        self.model = None
+        super(LSTMCaptioning, self).__init__()
+        self.ft_size = ft_size
+        self.emb_size = emb_size
+        self.lstm_memory = lstm_memory
+        self.vocab_size = vocab_size
+        self.max_seqlen = max_seqlen
+        self.num_layers = num_layers
 
-    def forward(self, x):
-        pass
+        self.linear1 = nn.Linear(self.ft_size, self.emb_size)
+        self.emb = nn.Embedding(self.vocab_size, self.emb_size)
+        self.rnn = nn.LSTM(self.emb_size, self.lstm_memory, self.num_layers, batch_first=True, dropout=dropout_p)
+        #self.rnn = nn.LSTMCell(self.emb_size, self.lstm_memory)
+        self.linear2 = nn.Linear(self.lstm_memory, self.vocab_size)
 
+    def init_embedding(self, tensor):
+        self.emb.weight.data.copy_(tensor)
 
+    # THWC must be flattened for image feature
+    # image_feature : (batch_size, ft_size)
+    # captions : (batch_size, seq_len)
+    # returns : (batch_size, vocab_size, seq_len)
+    def forward(self, image_feature, captions, init_state=None):
+        # feature : (batch_size, 1, emb_size)
+        feature = self.linear1(image_feature).unsqueeze(1)
+        # captions : (batch_size, seq_len, emb_size)
+        captions = self.emb(captions)
+        # inseq : (batch_size, 1+seq_len, emb_size)
+        inseq = torch.cat((feature, captions), dim=1)
+        # hiddens : (batch_size, seq_len, lstm_memory)
+        hiddens, _ = self.rnn(inseq[:, :-1, :])
+        # outputs : (batch_size, vocab_size, seq_len)
+        outputs = self.linear2(hiddens).transpose(1, 2)
+        return outputs
+
+    # image_feature : (batch_size, ft_size)
+    # method : one of ['greedy', 'beamsearch']
+    def sample(self, image_feature, method='greedy', init_state=None):
+        outputlist = []
+        # inputs : (batch_size, 1, emb_size)
+        inputs = self.linear1(image_feature).unsqueeze(1)
+        states = init_state
+        for idx in range(self.max_seqlen):
+            hiddens, states = self.rnn(inputs, states)
+            # outputs : (batch_size, vocab_size)
+            outputs = self.linear2(hiddens.squeeze(1))
+            outputlist.append(outputs)
+            # pred : (batch_size), LongTensor
+            _, pred = outputs.max(1)
+            # inputs : (batch_size, emb_size)
+            inputs = self.emb(pred)
+            inputs = inputs.unsqueeze(1)
+        # sampled : (batch_size, vocab_size, max_seqlen)
+        sampled = torch.stack(outputlist, 2)
+        return sampled
+
+    # TODO
+    def init_pretrained_weights(self, vocab):
+        self.emb.init_pretrained_weights(vocab)
 
 if __name__ == '__main__':
     bs = 10

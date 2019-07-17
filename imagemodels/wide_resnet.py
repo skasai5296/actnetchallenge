@@ -80,8 +80,7 @@ class WideResNet(nn.Module):
                  sample_size,
                  sample_duration,
                  k=1,
-                 shortcut_type='B',
-                 num_classes=400):
+                 shortcut_type='B'):
         self.inplanes = 64
         super(WideResNet, self).__init__()
         self.conv1 = nn.Conv3d(
@@ -105,14 +104,6 @@ class WideResNet(nn.Module):
         last_size = int(math.ceil(sample_size / 32))
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
-        self.fc = nn.Linear(512 * k * block.expansion, num_classes)
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv3d):
-                m.weight = nn.init.kaiming_normal(m.weight, mode='fan_out')
-            elif isinstance(m, nn.BatchNorm3d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
 
     def _make_layer(self, block, planes, blocks, shortcut_type, stride=1):
         downsample = None
@@ -153,7 +144,6 @@ class WideResNet(nn.Module):
         x = self.avgpool(x)
 
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
 
         return x
 

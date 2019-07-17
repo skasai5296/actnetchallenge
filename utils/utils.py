@@ -1,4 +1,6 @@
 import sys, os
+from functools import partialmethod
+from collections import OrderedDict
 
 import numpy as np
 
@@ -9,10 +11,33 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import torch.nn.init as init
 import torch.nn.functional as F
 
-from langmodels.vocab import tokenize
 
+PAD=0
 
-PAD = 0
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
+
+def remove_fc(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('fc.'):
+            continue
+        new_state_dict[name] = v
+    return new_state_dict
+
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
 
 class LabelSmoothingLoss(nn.Module):
     """
@@ -39,26 +64,6 @@ class LabelSmoothingLoss(nn.Module):
         loss = cematrix.masked_select(non_pad_mask).mean()
 
         return loss
-
-def collater(maxlen, datas, token_level=False):
-    # sort data by caption lengths for packing
-    if datas[0][1] is not None:
-        datas.sort(key=lambda x: x[1].size(0), reverse=True)
-    clips, captions = zip(*datas)
-    batchsize = len(captions)
-    ten = []
-    if datas[0][1] is not None:
-        lengths = torch.tensor([cap.size(0) for cap in captions], dtype=torch.long)
-        padded_captions = torch.zeros(batchsize, maxlen, dtype=torch.long)
-        for i, caption in enumerate(captions):
-            length = min(caption.size(0), maxlen)
-            padded_captions[i, :length] = caption[:length]
-    else:
-        padded_captions = None
-        lengths = None
-    clips = torch.stack(clips)
-
-    return clips, padded_captions, lengths
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -89,7 +94,7 @@ def weight_init(m):
         if m.bias is not None:
             init.normal_(m.bias.data)
     elif isinstance(m, nn.Conv3d):
-        init.xavier_normal_(m.weight.data)
+        init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
         if m.bias is not None:
             init.normal_(m.bias.data)
     elif isinstance(m, nn.ConvTranspose1d):
@@ -111,11 +116,12 @@ def weight_init(m):
         init.normal_(m.weight.data, mean=1, std=0.02)
         init.constant_(m.bias.data, 0)
     elif isinstance(m, nn.BatchNorm3d):
-        init.normal_(m.weight.data, mean=1, std=0.02)
-        init.constant_(m.bias.data, 0)
+        init.constant_(m.weight, 1)
+        init.constant_(m.bias, 0)
     elif isinstance(m, nn.Linear):
         init.xavier_normal_(m.weight.data)
-        init.normal_(m.bias.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
     elif isinstance(m, nn.LSTM):
         for param in m.parameters():
             if len(param.shape) >= 2:
@@ -143,10 +149,12 @@ def weight_init(m):
 
 
 # returns the mask containing 1s for not padding indexes
-# seq : (bs, seq_len)
+# seq : (bs, seq_len) or (bs, seq_len, dim)
 def get_non_pad_mask(seq):
-    assert seq.dim() == 2
-    return seq.ne(PAD).type(torch.float).unsqueeze(-1)
+    if seq.dim() == 2:
+        return seq.ne(PAD).type(torch.float).unsqueeze(-1)
+    else:
+        return get_non_pad_mask(seq[:, :, 0])
 
 # returns sinusoid encoding for given position and dimension.
 # torch.FloatTensor(n_position x d_hid)
@@ -172,12 +180,19 @@ def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
 
 # returns the mask for padding part of sequence
 def get_attn_key_pad_mask(seq_k, seq_q):
-    ''' For masking out the padding part of key sequence. '''
+    ''' For masking out the padding part of key sequence. 
+    Returns: (bs x seqlen x seqlen) '''
 
-    # Expand to fit the shape of key query attention matrix.
-    len_q = seq_q.size(1)
-    padding_mask = seq_k.eq(PAD)
-    padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
+    if seq_k.dim() == 2:
+        # Expand to fit the shape of key query attention matrix.
+        len_q = seq_q.size(1)
+        padding_mask = seq_k.eq(PAD)
+        padding_mask = padding_mask.unsqueeze(1).expand(-1, len_q, -1)  # b x lq x lk
+    elif seq_k.dim() == 3:
+        if seq_q.dim() == 3:
+            padding_mask = get_attn_key_pad_mask(seq_k[:, :, 0], seq_q[:, :, 0])
+        else:
+            padding_mask = get_attn_key_pad_mask(seq_k[:, :, 0], seq_q)
 
     return padding_mask
 
@@ -191,5 +206,51 @@ def get_subsequent_mask(seq):
     subsequent_mask = subsequent_mask.unsqueeze(0).expand(sz_b, -1, -1)  # b x ls x ls
 
     return subsequent_mask
+
+
+def partialclass(cls, *args, **kwargs):
+
+    class PartialClass(cls):
+        __init__ = partialmethod(cls.__init__, *args, **kwargs)
+
+    return PartialClass
+
+
+def sec2str(sec):
+    if sec < 60:
+        return "elapsed: {:02d}s".format(int(sec))
+    elif sec < 3600:
+        min = int(sec / 60)
+        sec = int(sec - min * 60)
+        return "elapsed: {:02d}m{:02d}s".format(min, sec)
+    elif sec < 24 * 3600:
+        min = int(sec / 60)
+        hr = int(min / 60)
+        sec = int(sec - min * 60)
+        min = int(min - hr * 60)
+        return "elapsed: {:02d}h{:02d}m{:02d}s".format(hr, min, sec)
+    elif sec < 365 * 24 * 3600:
+        min = int(sec / 60)
+        hr = int(min / 60)
+        dy = int(hr / 24)
+        sec = int(sec - min * 60)
+        min = int(min - hr * 60)
+        hr = int(hr - dy * 24)
+        return "elapsed: {:02d} days, {:02d}h{:02d}m{:02d}s".format(dy, hr, min, sec)
+
+
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
+
+
+
+
+
 
 
