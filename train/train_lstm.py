@@ -125,7 +125,7 @@ def train_lstm(args):
 
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))
-        nll, ppl, sample = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
+        nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
         scheduler.step(ppl)
 
         print("{}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
@@ -138,7 +138,7 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
     ep_begin = time.time()
     before = time.time()
     for it, data in enumerate(trainloader):
-        # TODO: currently supports only batch size of 1, enable more in the future
+        # TODO: currently supports only one timestamp, enable more in the future
         ids = data['id'][0]
         durations = data['duration'][0]
         sentences = data['sentences'][0]
@@ -212,7 +212,7 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, log_inte
                 output = decoder.module.sample(feature, captions)
 
             # sample : (seq_len)
-            sample = output.max(1)
+            sample = output.argmax(1)
 
             # backpropagate loss and store negative log likelihood
             nll = criterion(output, target).cpu().item()
@@ -223,9 +223,11 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, log_inte
             if it % log_interval == (log_interval-1):
                 print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/log_interval), flush=True)
                 before = time.time()
+                print(sample.size())
                 samplesentence = return_sentences(sample, text_proc)
                 print("sample sentences: ")
-                print(samplesentence)
+                for sent in samplesentence:
+                    print(sent)
 
             # evaluate for only 100 iterations
             if it % 100 == 99:
