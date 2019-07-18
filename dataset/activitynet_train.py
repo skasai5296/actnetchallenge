@@ -71,7 +71,7 @@ class ActivityNetCaptions_Train(Dataset):
                  root_path,
                  frame_path='frames',
                  ann_path='train_fps.json',
-                 n_samples_for_each_video=1,
+                 n_samples_for_each_video=10,
                  spatial_transform=None,
                  temporal_transform=None,
                  target_transform=None,
@@ -95,7 +95,12 @@ class ActivityNetCaptions_Train(Dataset):
             lastframenum = int(re.findall(r'\d+', lastfile)[0])
             content["duration"] = lastframenum
             content["sentences"] = obj["sentences"]
-            content["timestamps"] = obj["timestamps"]
+            timestamps = []
+            for t in obj["timestamps"]:
+                startframe = max(1, int(t[0]*obj["fps"]))
+                endframe = min(lastframenum, int(t[1]*obj["fps"]))
+                timestamps.append([startframe, endframe])
+            content["timestamps"] = timestamps
             content["fps"] = obj["fps"]
             self.data.append(content)
 
@@ -132,20 +137,14 @@ class ActivityNetCaptions_Train(Dataset):
         for num, (sentence, timestamp) in enumerate(zip(self.data[index]['sentences'], self.data[index]['timestamps'])):
             if num == self.n_actions:
                 break
-            print(int(fps*timestamp[0]))
-            print(duration)
-            begin_frame = max(1, int(fps * timestamp[0]))
-            end_frame = min(duration, int(fps * timestamp[1]))
-            if begin_frame >= end_frame:
-                continue
             sentences.append(sentence)
-            timestamps.append([begin_frame, end_frame])
-            frame_indices = list(range(begin_frame, end_frame))
+            timestamps.append(timestamp)
+            frame_indices = list(range(timestamp[0], timestamp[1]))
             fidlist.append(frame_indices)
 
         actionnum = np.random.randint(0, len(sentences))
-        sentences = sentences[actionnum]
-        timestamps = timestamps[actionnum]
+        sentence = sentences[actionnum]
+        timestamp = timestamps[actionnum]
         frame_indices = fidlist[actionnum]
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
@@ -163,7 +162,7 @@ class ActivityNetCaptions_Train(Dataset):
             print([cl.size() for cl in clip], flush=True)
             print(id, flush=True)
 
-        return {'id': id, 'duration': duration, 'sentences': sentences, 'timestamps': timestamps, 'fps': fps, 'clip': clip}
+        return {'id': id, 'duration': duration, 'sentences': sentence, 'timestamps': timestamp, 'fps': fps, 'clip': clip}
 
     def __len__(self):
         return self.len
@@ -176,7 +175,6 @@ if __name__ == '__main__':
     dset = ActivityNetCaptions_Train('/ssd1/dsets/activitynet_captions', spatial_transform=sp, temporal_transform=tp)
     print(dset[0][0].size())
     print(dset[0][1])
-
 
 
 

@@ -54,6 +54,12 @@ python train_lstm.py \
 --enc_pretrain_path ../models/save_105.pth \
 > ../logs/config1.log 2>&1
 
+# python train_lstm.py \
+# --cnn_name resnext --cnn_depth 101 --rnn_name LSTM --rnn_layers 3 --max_seqlen 30 --annpaths train_fps.json val_1_fps.json val_2_fps.json \
+# --emb_init ../wordvectors/glove.6B.300d.txt --max_epochs 20 --n_cpu 0 --feature_size 2048 --lstm_memory 512 --embedding_size 300 \
+# --min_freq 5 --imsize 224 --clip_len 32 --batch_size 8 --lr 1e-3 --momentum 0.9 --weight_decay 1e-4 --patience 10 \
+# --enc_pretrain_path ../models/save_105.pth \
+# > ../logs/config1.log 2>&1
 
 # --- possible arguments ---
 #     # configurations of dataset (paths)

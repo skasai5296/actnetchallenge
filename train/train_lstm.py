@@ -39,11 +39,11 @@ def train_lstm(args):
     tp = tpt.Compose([tpt.TemporalRandomCrop(args.clip_len), tpt.LoopPadding(args.clip_len)])
 
     # dataloading
-    train_dset = ActivityNetCaptions_Train(args.root_path, ann_path='train_fps.json', n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    trainloader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=10)
+    train_dset = ActivityNetCaptions_Train(args.root_path, ann_path='train_fps.json', sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
+    trainloader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=100)
     max_train_it = int(len(train_dset) / args.batch_size)
-    val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], n_samples_for_each_video=1, sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
-    valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=10)
+    val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
+    valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=100)
     max_val_it = int(len(val_dset) / args.batch_size)
 
     # models
@@ -122,7 +122,6 @@ def train_lstm(args):
 
         print("saved encoder model to {}".format(enc_save_path))
         print("saved decoder model to {}".format(dec_save_path))
-
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))
         nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
