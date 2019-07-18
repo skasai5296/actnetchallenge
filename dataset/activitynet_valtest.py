@@ -147,26 +147,29 @@ class ActivityNetCaptions_Val(Dataset):
             frame_indices = list(range(timestamp[0], timestamp[1]))
             fidlist.append(frame_indices)
 
-        actionnum = np.random.randint(0, len(sentences))
-        sentence = sentences[actionnum]
-        timestamp = timestamps[actionnum]
-        frame_indices = fidlist[actionnum]
+        while True:
+            actionnum = np.random.randint(0, len(sentences))
+            sentence = sentences[actionnum]
+            timestamp = timestamps[actionnum]
+            frame_indices = fidlist[actionnum]
 
-        if self.temporal_transform is not None:
-            frame_indices = self.temporal_transform(frame_indices)
+            if self.temporal_transform is not None:
+                frame_indices = self.temporal_transform(frame_indices)
 
-        clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
-        if self.spatial_transform is not None:
-            self.spatial_transform.randomize_parameters()
-            clip = [self.spatial_transform(img) for img in clip]
-        try:
-            clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
-            assert clip.size(1) == self.sample_duration
-        except:
-            print("stack failed or clip is not right size", flush=True)
-            print(len(clip), flush=True)
-            print([cl.size() for cl in clip], flush=True)
-            print(id, flush=True)
+            clip = self.loader(os.path.join(self.frm_path, id), frame_indices)
+            if self.spatial_transform is not None:
+                self.spatial_transform.randomize_parameters()
+                clip = [self.spatial_transform(img) for img in clip]
+            try:
+                clip = torch.stack(clip, 0).permute(1, 0, 2, 3)
+                assert clip.size(1) == self.sample_duration
+            except:
+                print("stack failed or clip is not right size", flush=True)
+                print(len(clip), flush=True)
+                print([cl.size() for cl in clip], flush=True)
+                print(id, flush=True)
+                continue
+            break
 
         return {'id': id, 'duration': duration, 'sentences': sentence, 'timestamps': timestamp, 'fps': fps, 'clip': clip}
 
