@@ -87,11 +87,11 @@ class ActivityNetCaptions_Train(Dataset):
 
         self.data = []
         for id, obj in ann.items():
-            if "fps" not in obj.keys():
+            if "fps" not in obj.keys() or len(obj["sentences"]) < 1:
                 continue
             content = {}
             content["id"] = id
-            lastfile = os.listdir(os.path.join(self.frm_path, id))[-1]
+            lastfile = sorted(os.listdir(os.path.join(self.frm_path, id)))[-1]
             lastframenum = int(re.findall(r'\d+', lastfile)[0])
             content["duration"] = lastframenum
             content["sentences"] = obj["sentences"]
@@ -132,15 +132,21 @@ class ActivityNetCaptions_Train(Dataset):
         for num, (sentence, timestamp) in enumerate(zip(self.data[index]['sentences'], self.data[index]['timestamps'])):
             if num == self.n_actions:
                 break
-            sentences.append(sentence)
+            print(int(fps*timestamp[0]))
+            print(duration)
             begin_frame = max(1, int(fps * timestamp[0]))
             end_frame = min(duration, int(fps * timestamp[1]))
+            if begin_frame >= end_frame:
+                continue
+            sentences.append(sentence)
             timestamps.append([begin_frame, end_frame])
             frame_indices = list(range(begin_frame, end_frame))
-            assert len(frame_indices) > 0
             fidlist.append(frame_indices)
 
-        frame_indices = fidlist[np.random.randint(0, len(sentences))]
+        actionnum = np.random.randint(0, len(sentences))
+        sentences = sentences[actionnum]
+        timestamps = timestamps[actionnum]
+        frame_indices = fidlist[actionnum]
         if self.temporal_transform is not None:
             frame_indices = self.temporal_transform(frame_indices)
 

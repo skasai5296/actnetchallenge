@@ -186,12 +186,12 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, log_inte
     with torch.no_grad():
         for it, data in enumerate(valloader):
             # TODO: currently supports only batch size of 1, enable more in the future
-            ids = data['id'][0]
-            durations = data['duration'][0]
-            sentences = data['sentences'][0]
-            timestamps = data['timestamps'][0]
-            fps = data['fps'][0]
-            clip = data['clips'][0]
+            ids = data['id']
+            durations = data['duration']
+            sentences = data['sentences']
+            timestamps = data['timestamps']
+            fps = data['fps']
+            clip = data['clip']
 
             captions = return_idx(sentences, text_proc)
 
