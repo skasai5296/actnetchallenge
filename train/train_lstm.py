@@ -133,6 +133,8 @@ def train_lstm(args):
 
 
 def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, text_proc, log_interval, max_it):
+    encoder.train()
+    decoder.train()
 
     ep_begin = time.time()
     before = time.time()
