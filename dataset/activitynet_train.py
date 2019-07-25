@@ -94,7 +94,7 @@ class ActivityNetCaptions_Train(Dataset):
             lastfile = sorted(os.listdir(os.path.join(self.frm_path, id)))[-1]
             lastframenum = int(re.findall(r'\d+', lastfile)[0])
             content["duration"] = lastframenum
-            content["sentences"] = obj["sentences"]
+            content["sentences"] = [sentence.strip() for sentence in obj["sentences"]]
             timestamps = []
             for t in obj["timestamps"]:
                 startframe = max(1, int(t[0]*obj["fps"]))
