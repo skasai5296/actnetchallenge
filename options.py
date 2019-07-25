@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument('--conv1_t_size', default=7, type=int, help='Kernel size in t dim of conv1.')
     parser.add_argument('--conv1_t_stride', default=1, type=int, help='Stride in t dim of conv1.')
     parser.add_argument('--no_max_pool', action='store_true', help='If true, the max pooling after conv1 is removed.')
+    parser.add_argument('--freeze', action='store_true', help='If true, 3DCNN weights are freezed.')
 
     # configurations of captioning module
     parser.add_argument('--dec_pretrain_path', type=str, help='Pretrained model of captioning module (.pth)')

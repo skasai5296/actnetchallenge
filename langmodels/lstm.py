@@ -82,6 +82,20 @@ class LSTMCaptioning(nn.Module):
     def init_pretrained_weights(self, vocab):
         self.emb.init_pretrained_weights(vocab)
 
+
+class Attention(nn.Module):
+    def __init__(self,
+                 encoder_dim,
+                 decoder_dim,
+                 attention_dim
+                 ):
+        super(Attention, self).__init__()
+        pass
+
+    def forward(self, feature):
+        pass
+
+
 class LSTMCaptioningWithAttention(nn.Module):
     def __init__(self,
                  ft_size=512,

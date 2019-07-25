@@ -98,7 +98,7 @@ def train_lstm(args):
     for ep in range(args.max_epochs):
 
         # train for epoch
-        video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, log_interval=args.log_every, max_it=max_train_it)
+        video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, max_it=max_train_it, opt=args)
 
         # save models
         enc_save_dir = os.path.join(args.model_save_path, "encoder")
@@ -124,7 +124,7 @@ def train_lstm(args):
         print("saved decoder model to {}".format(dec_save_path))
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))
-        nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, log_interval=args.log_every, max_it=max_val_it)
+        nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, max_it=max_val_it, opt=args)
         scheduler.step(ppl)
 
         print("training time {}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
@@ -132,8 +132,9 @@ def train_lstm(args):
     print("end training")
 
 
-def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, text_proc, log_interval, max_it):
-    encoder.train()
+def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, text_proc, max_it, opt):
+    if not opt.freeze:
+        encoder.train()
     decoder.train()
 
     ep_begin = time.time()
@@ -157,7 +158,11 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
         target = captions.clone().detach()
 
         # flow through model
-        feature = encoder(clip)
+        if opt.freeze:
+            with torch.no_grad():
+                feature = encoder(clip)
+        else:
+            feature = encoder(clip)
         # feature : (bs x C')
 
         output = decoder(feature, captions)
@@ -171,13 +176,13 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
         optimizer.step()
 
         # log losses
-        if it % log_interval == (log_interval-1):
-            print("epoch {} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, max_it, nll.cpu().item(), (time.time()-before)/log_interval), flush=True)
+        if it % opt.log_interval == (opt.log_interval-1):
+            print("epoch {} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, max_it, nll.cpu().item(), (time.time()-before)/opt.log_interval), flush=True)
             before = time.time()
 
     return encoder, decoder, optimizer
 
-def validate(valloader, encoder, decoder, criterion, device, text_proc, log_interval, max_it):
+def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, opt):
     encoder.eval()
     decoder.eval()
     nll_list = []
@@ -221,8 +226,8 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, log_inte
             ppl = 2 ** nll
             ppl_list.append(ppl)
 
-            if it % log_interval == (log_interval-1):
-                print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/log_interval), flush=True)
+            if it % opt.log_interval == (opt.log_interval-1):
+                print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/opt.log_interval), flush=True)
                 before = time.time()
                 samplesentence = return_sentences(sample, text_proc)
                 print("sample sentences: ")
