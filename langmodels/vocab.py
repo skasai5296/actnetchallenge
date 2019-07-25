@@ -48,7 +48,11 @@ def return_sentences(ten, text_proc):
         ten = ten.tolist()
     out = []
     for idxs in ten:
-        tokenlist = [text_proc.vocab.itos[idx] for idx in idxs]
+        tokenlist = []
+        for idx in idxs[1:]:
+            if idx == text_proc.vocab.stoi["<eos>"]:
+                break
+            tokenlist.append(text_proc.vocab.itos[idx])
         out.append(" ".join(tokenlist))
     return out
 
