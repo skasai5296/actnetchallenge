@@ -176,8 +176,8 @@ def train_epoch(trainloader, encoder, decoder, optimizer, criterion, device, tex
         optimizer.step()
 
         # log losses
-        if it % opt.log_interval == (opt.log_interval-1):
-            print("epoch {} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, max_it, nll.cpu().item(), (time.time()-before)/opt.log_interval), flush=True)
+        if it % opt.log_every == (opt.log_every-1):
+            print("epoch {} | iter {:06d}/{:06d} | nll loss: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-ep_begin), it+1, max_it, nll.cpu().item(), (time.time()-before)/opt.log_every), flush=True)
             before = time.time()
 
     return encoder, decoder, optimizer
