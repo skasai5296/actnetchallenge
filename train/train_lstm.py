@@ -44,7 +44,8 @@ def train_lstm(args):
     max_train_it = int(len(train_dset) / args.batch_size)
     val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
     valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=100)
-    max_val_it = int(len(val_dset) / args.batch_size)
+    #max_val_it = int(len(val_dset) / args.batch_size)
+    max_val_it = 100
 
     # models
     video_encoder = generate_3dcnn(args)
@@ -189,6 +190,9 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
     ppl_list = []
     begin = time.time()
     before = time.time()
+    gt_list = []
+    ans_list = []
+    evaluator = NLGEval()
     with torch.no_grad():
         for it, data in enumerate(valloader):
             # TODO: currently supports only batch size of 1, enable more in the future
@@ -226,16 +230,24 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
             ppl = 2 ** nll
             ppl_list.append(ppl)
 
+            gt_list.extend([[sent] for sent in sentences])
+            ans_list.extend(return_sentences(sample, text_proc))
+
             if it % opt.log_every == (opt.log_every-1):
                 print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/opt.log_every), flush=True)
                 before = time.time()
                 samplesentence = return_sentences(sample, text_proc)
-                print("sample sentences: ")
-                for sent in samplesentence:
-                    print(sent)
 
             # evaluate for only 100 iterations
-            if it % 100 == 99:
+            if it == max_it-1:
+                print("sample sentences:")
+                for s in ans_list[-5:]:
+                    print(s)
+                metrics_dict = evaluator.compute_metrics(gt_list, ans_list)
+                print("---METRICS---", flush=True)
+                for k, v in metrics_dict.items():
+                    print("{}:\t{}".format(k, v))
+                print("---METRICS---", flush=True)
                 break
 
     meannll = sum(nll_list) / len(nll_list)
