@@ -8,11 +8,25 @@ TO-DO:
 - [x] write dataset class for ActivityNet Captions dataset
 - [x] write baseline model for training
 - [x] add optional training
+- [x] add evaluation
+- [ ] add spatiotemporal attention
 - [ ] add proposal generation code
 - [ ] add testing code
 - [ ] add Transformer training
 - [ ] add BERT training
 - [ ] add character level training
+
+## Requirements
+* Python>=3.6
+* numpy
+* matplotlib
+* Pillow
+* accimage (optional, faster than Pillow)
+* pytorch>=1.0
+* torchvision>=0.2
+* pytube
+* torchtext (for spacy tokenizer and vocabulary)
+* nlg-eval (for evaluation metrics)
 
 ## How to download ActivityNet Captions Dataset (ActivityNet Videos + Annotations)
 1. Download json file for ActivityNet dataset from [here](http://ec2-52-11-11-89.us-west-2.compute.amazonaws.com/files/activity_net.v1-3.min.json)
@@ -39,5 +53,4 @@ TO-DO:
 ## Samples
 
 ### Transformer Captions
----
 ![Transformer Captions](assets/transformer_sample.png)
