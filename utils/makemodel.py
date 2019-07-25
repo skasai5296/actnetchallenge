@@ -58,8 +58,10 @@ def generate_3dcnn(opt):
     if opt.enc_pretrain_path is not None:
         print('loading pretrained 3DCNN model from {}'.format(opt.enc_pretrain_path))
         pretrain = torch.load(opt.enc_pretrain_path)
-        #fixed = remove_fc(fix_model_state_dict(pretrain['state_dict']))
-        fixed = remove_fc(fix_model_state_dict(pretrain))
+        if "state_dict" in pretrain.keys():
+            fixed = remove_fc(fix_model_state_dict(pretrain['state_dict']))
+        else:
+            fixed = remove_fc(fix_model_state_dict(pretrain))
         model.load_state_dict(fixed)
     else:
         model.apply(weight_init)
@@ -85,8 +87,10 @@ def generate_rnn(vocab_size, opt):
     if opt.dec_pretrain_path is not None:
         print('loading pretrained RNN model from {}'.format(opt.dec_pretrain_path))
         pretrain = torch.load(opt.dec_pretrain_path)
-        #fixed = fix_model_state_dict(pretrain['state_dict'])
-        fixed = fix_model_state_dict(pretrain)
+        if "state_dict" in pretrain.keys():
+            fixed = fix_model_state_dict(pretrain['state_dict'])
+        else:
+            fixed = fix_model_state_dict(pretrain)
         model.load_state_dict(fixed)
     else:
         model.apply(weight_init)

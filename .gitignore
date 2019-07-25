@@ -5,6 +5,8 @@
 *.json
 *.ipynb
 models/
+models_continue/
+models_freeze_enc/
 wordvectors/
 logs/
 eval/PGM_proposals/
