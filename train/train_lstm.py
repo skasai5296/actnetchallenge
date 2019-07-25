@@ -226,8 +226,8 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
             ppl = 2 ** nll
             ppl_list.append(ppl)
 
-            if it % opt.log_interval == (opt.log_interval-1):
-                print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/opt.log_interval), flush=True)
+            if it % opt.log_every == (opt.log_every-1):
+                print("validation {} | iter {:06d}/{:06d} | perplexity: {:.04f} | {:02.04f}s per loop".format(sec2str(time.time()-begin), it+1, max_it, sum(ppl_list)/len(ppl_list), (time.time()-before)/opt.log_every), flush=True)
                 before = time.time()
                 samplesentence = return_sentences(sample, text_proc)
                 print("sample sentences: ")
