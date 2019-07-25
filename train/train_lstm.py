@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.optim as optim
+from nlgeval import NLGEval
 
 sys.path.append(os.pardir)
 from utils.utils import sec2str, count_parameters, weight_init, get_pretrained_from_txt
@@ -123,6 +124,7 @@ def train_lstm(args):
 
         print("saved encoder model to {}".format(enc_save_path))
         print("saved decoder model to {}".format(dec_save_path))
+
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))
         nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, max_it=max_val_it, opt=args)
@@ -230,7 +232,7 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
             ppl = 2 ** nll
             ppl_list.append(ppl)
 
-            gt_list.extend([[sent] for sent in sentences])
+            gt_list.extend(sentences)
             ans_list.extend(return_sentences(sample, text_proc))
 
             if it % opt.log_every == (opt.log_every-1):
@@ -243,10 +245,10 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
                 print("sample sentences:")
                 for s in ans_list[-5:]:
                     print(s)
-                metrics_dict = evaluator.compute_metrics(gt_list, ans_list)
+                metrics_dict = evaluator.compute_metrics(ref_list=[gt_list], hyp_list=ans_list)
                 print("---METRICS---", flush=True)
                 for k, v in metrics_dict.items():
-                    print("{}:\t{}".format(k, v))
+                    print("{}:\t\t{}".format(k, v))
                 print("---METRICS---", flush=True)
                 break
 
