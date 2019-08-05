@@ -99,6 +99,7 @@ def train_lstm(args):
     begin = time.time()
     for ep in range(args.max_epochs):
 
+        """
         # train for epoch
         video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, max_it=max_train_it, opt=args)
 
@@ -124,6 +125,7 @@ def train_lstm(args):
 
         print("saved encoder model to {}".format(enc_save_path))
         print("saved decoder model to {}".format(dec_save_path))
+        """
 
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))

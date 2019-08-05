@@ -27,6 +27,7 @@ TO-DO:
 * pytube
 * torchtext (for spacy tokenizer and vocabulary)
 * nlg-eval (for evaluation metrics)
+* mkl-service (for theano, evaluation)
 
 ## How to download ActivityNet Captions Dataset (ActivityNet Videos + Annotations)
 1. Download json file for ActivityNet dataset from [here](http://ec2-52-11-11-89.us-west-2.compute.amazonaws.com/files/activity_net.v1-3.min.json)

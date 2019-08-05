@@ -6,6 +6,7 @@
 *.ipynb
 models/
 models_continue/
+models_continue2/
 models_freeze_enc/
 wordvectors/
 logs/

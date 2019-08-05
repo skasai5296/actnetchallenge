@@ -165,9 +165,8 @@ class ActivityNetCaptions_Val(Dataset):
                 assert clip.size(1) == self.sample_duration
             except:
                 print("stack failed or clip is not right size", flush=True)
-                print(len(clip), flush=True)
-                print([cl.size() for cl in clip], flush=True)
                 print(id, flush=True)
+                print(frame_indices, flush=True)
                 continue
             break
 
