@@ -142,10 +142,11 @@ class ActivityNetCaptions_Val(Dataset):
         for num, (sentence, timestamp) in enumerate(zip(self.data[index]['sentences'], self.data[index]['timestamps'])):
             if num == self.n_actions:
                 break
-            sentences.append(sentence)
-            timestamps.append(timestamp)
-            frame_indices = list(range(timestamp[0], timestamp[1]))
-            fidlist.append(frame_indices)
+            if timestamp[0] < timestamp[1]:
+                sentences.append(sentence)
+                timestamps.append(timestamp)
+                frame_indices = list(range(timestamp[0], timestamp[1]))
+                fidlist.append(frame_indices)
 
         while True:
             actionnum = np.random.randint(0, len(sentences))

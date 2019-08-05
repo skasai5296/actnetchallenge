@@ -46,7 +46,7 @@ def train_lstm(args):
     val_dset = ActivityNetCaptions_Val(args.root_path, ann_path=['val_1_fps.json', 'val_2_fps.json'], sample_duration=args.clip_len, spatial_transform=sp, temporal_transform=tp)
     valloader = DataLoader(val_dset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu, drop_last=True, timeout=100)
     #max_val_it = int(len(val_dset) / args.batch_size)
-    max_val_it = 100
+    max_val_it = 10
 
     # models
     video_encoder = generate_3dcnn(args)
@@ -87,7 +87,10 @@ def train_lstm(args):
 
     # optimizer, scheduler
     params = list(video_encoder.parameters()) + list(caption_gen.parameters())
-    optimizer = optim.SGD(params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer = optim.SGD([
+            {"params" : video_encoder.parameters(), "lr" : args.lr_cnn, "momentum" : args.momentum_cnn},
+            {"params" : caption_gen.parameters(), "lr" : args.lr_rnn, "momentum" : args.momentum_rnn}],
+            weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.9, patience=args.patience, verbose=True)
 
     # count parameters
@@ -99,7 +102,6 @@ def train_lstm(args):
     begin = time.time()
     for ep in range(args.max_epochs):
 
-        """
         # train for epoch
         video_encoder, caption_gen, optimizer = train_epoch(trainloader, video_encoder, caption_gen, optimizer, criterion, device, text_proc, max_it=max_train_it, opt=args)
 
@@ -125,12 +127,12 @@ def train_lstm(args):
 
         print("saved encoder model to {}".format(enc_save_path))
         print("saved decoder model to {}".format(dec_save_path))
-        """
 
         # evaluate
         print("begin evaluation for epoch {} ...".format(ep+1))
-        nll, ppl = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, max_it=max_val_it, opt=args)
-        scheduler.step(ppl)
+        nll, ppl, metrics = validate(valloader, video_encoder, caption_gen, criterion, device, text_proc, max_it=max_val_it, opt=args)
+        if metrics is not None:
+            scheduler.step(metrics["METEOR"])
 
         print("training time {}, epoch {:04d}/{:04d} done, validation loss: {:.06f}, perplexity: {:.03f}".format(sec2str(time.time()-begin), ep+1, args.max_epochs, nll, ppl))
 
@@ -245,19 +247,23 @@ def validate(valloader, encoder, decoder, criterion, device, text_proc, max_it, 
             # evaluate for only 100 iterations
             if it == max_it-1:
                 print("sample sentences:")
-                for s in ans_list[-5:]:
+                for s in ans_list[-10:]:
                     print(s)
-                metrics_dict = evaluator.compute_metrics(ref_list=[gt_list], hyp_list=ans_list)
                 print("---METRICS---", flush=True)
-                for k, v in metrics_dict.items():
-                    print("{}:\t\t{}".format(k, v))
+                try:
+                    metrics_dict = evaluator.compute_metrics(ref_list=[gt_list], hyp_list=ans_list)
+                    for k, v in metrics_dict.items():
+                        print("{}:\t\t{}".format(k, v))
+                except:
+                    metrics_dict = None
+                    print("could not evaluate, some sort of error in NLGEval", flush=True)
                 print("---METRICS---", flush=True)
                 break
 
     meannll = sum(nll_list) / len(nll_list)
     meanppl = sum(ppl_list) / len(ppl_list)
 
-    return meannll, meanppl
+    return meannll, meanppl, metrics_dict
 
 
 if __name__ == '__main__':

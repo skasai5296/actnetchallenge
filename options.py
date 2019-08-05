@@ -48,8 +48,10 @@ def parse_args():
     parser.add_argument('--imsize', type=int, default=224)
     parser.add_argument('--clip_len', type=int, default=16)
     parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--lr', type=float, default=1e-2)
-    parser.add_argument('--momentum', type=float, default=0.9)
+    parser.add_argument('--lr_cnn', type=float, default=1e-2)
+    parser.add_argument('--lr_rnn', type=float, default=1e-2)
+    parser.add_argument('--momentum_cnn', type=float, default=0.9)
+    parser.add_argument('--momentum_rnn', type=float, default=0.9)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     parser.add_argument('--patience', type=int, default=10)
 
