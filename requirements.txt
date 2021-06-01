@@ -31,5 +31,5 @@ torch==1.0.1
 torchvision==0.2.1
 tornado==6.0.2
 tqdm==4.31.1
-urllib3==1.24.3
+urllib3==1.26.5
 youtube-dl==2019.4.7
